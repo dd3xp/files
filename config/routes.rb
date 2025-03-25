@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
-  get "dashboard", to: "dashboard#index"
-  root "dashboard#index"
+  root 'files#index'
+  resources :files, only: [:index]
+  get 'terminal', to: 'terminal#index'
 end

@@ -1,0 +1,16 @@
+<%= turbo_frame_tag "main_content" do %>
+  <div class="dashboard-container">
+    <%= render 'shared/sidebar' %>
+    
+    <div class="main-content">
+      <div class="content-header">
+        <h1><%= @title %></h1>
+        <p><%= @message %></p>
+      </div>
+      
+      <div class="terminal-container">
+        <!-- 终端操作的内容将在这里实现 -->
+      </div>
+    </div>
+  </div>
+<% end %> 

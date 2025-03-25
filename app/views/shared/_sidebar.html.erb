@@ -1,0 +1,15 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>控制面板</h2>
+  </div>
+  <div class="sidebar-nav">
+    <%= link_to files_path, class: "nav-item", data: { turbo_frame: "main_content" } do %>
+      <i class="fas fa-folder"></i>
+      <span>文件管理</span>
+    <% end %>
+    <%= link_to terminal_path, class: "nav-item", data: { turbo_frame: "main_content" } do %>
+      <i class="fas fa-terminal"></i>
+      <span>终端操作</span>
+    <% end %>
+  </div>
+</div> 

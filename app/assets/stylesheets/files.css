@@ -1,0 +1,131 @@
+.file-browser {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+
+.breadcrumb {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+}
+
+.breadcrumb a {
+  color: #3498db;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb span {
+  color: #6c757d;
+  margin: 0 5px;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.file-item:hover {
+  background-color: #f8f9fa;
+}
+
+.file-item a {
+  text-decoration: none;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.file-item .file {
+  display: flex;
+  align-items: center;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.file-item i {
+  margin-right: 15px;
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* 文件类型图标颜色 */
+.file-item i.fa-folder {
+  color: #f1c40f;
+}
+
+.file-item i.fa-file {
+  color: #95a5a6;
+}
+
+.file-item i.fa-file-code {
+  color: #3498db;
+}
+
+.file-item i.fa-file-image {
+  color: #2ecc71;
+}
+
+.file-item i.fa-file-pdf {
+  color: #e74c3c;
+}
+
+.file-item i.fa-file-word {
+  color: #3498db;
+}
+
+.file-item i.fa-file-excel {
+  color: #27ae60;
+}
+
+.file-item i.fa-file-powerpoint {
+  color: #e67e22;
+}
+
+.file-item i.fa-file-archive {
+  color: #8e44ad;
+}
+
+.file-item i.fa-file-video {
+  color: #e74c3c;
+}
+
+.file-item i.fa-file-audio {
+  color: #1abc9c;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-right: 20px;
+  min-width: 100px;
+  text-align: right;
+}
+
+.file-date {
+  color: #6c757d;
+  font-size: 0.9rem;
+  min-width: 150px;
+  text-align: right;
+} 

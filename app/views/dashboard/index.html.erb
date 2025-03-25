@@ -1,23 +1,25 @@
-<div class="dashboard">
-  <h1><%= @title %></h1>
-  <p><%= @message %></p>
-
-  <div class="dashboard-cards">
-    <div class="dashboard-card">
-      <h2>用户统计</h2>
-      <p>当前在线用户: <strong>120</strong></p>
+<div class="dashboard-container">
+  <!-- 左侧菜单栏 -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>文件传输系统</h2>
     </div>
 
-    <div class="dashboard-card">
-      <h2>系统负载</h2>
-      <p>CPU 使用率: <strong>72%</strong></p>
-    </div>
-
-    <div class="dashboard-card">
-      <h2>消息通知</h2>
-      <p>未读消息: <strong>5 条</strong></p>
+    <!-- 左侧菜单栏按钮 -->
+    <div class="sidebar-buttons">
+      <a href="/files" class="<%= 'active' if current_page?('/files') %>">
+        <i class="fas fa-folder"></i>
+        <span>文件管理</span>
+      </a>
+      <a href="/terminal" class="<%= 'active' if current_page?('/terminal') %>">
+        <i class="fas fa-terminal"></i>
+        <span>终端操作</span>
+      </a>
     </div>
   </div>
 
-  <button class="dashboard-button">刷新数据</button>
+  <div class="main-content">
+    <h1><%= @title %></h1>
+    <p><%= @message %></p>
+  </div>
 </div>
