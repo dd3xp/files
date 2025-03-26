@@ -1,49 +1,42 @@
 <%= turbo_frame_tag "main_content" do %>
-  <div class="dashboard-container">
-    <%= render 'shared/sidebar' %>
-    
-    <div class="main-content">
-      <div class="content-header">
-        <h1><%= @title %></h1>
-        <p><%= @message %></p>
-      </div>
+  <div class="content-header">
+    <h1><%= @title %></h1>
+    <p><%= @message %></p>
+  </div>
 
-      <!-- 文件浏览器 -->
-      <div class="file-browser">
-      
-        <!-- 面包屑导航 -->
-        <div class="breadcrumb">
-          <a href="/files">根目录</a>
-          <% @current_path.split('/').reject(&:empty?).each_with_index do |dir, index| %>
-            <% current_path = '/' + @current_path.split('/')[0..index+1].join('/') %>
-            <span>/</span>
-            <a href="/files?path=<%= current_path %>"><%= dir %></a>
-          <% end %>
-        </div>
-        
-        <!-- 文件列表 -->
-        <div class="file-list">
-          <% @files.each do |file| %>
-            <div class="file-item">
-              <% if file[:is_directory] %>
-                <!-- 如果是目录，则显示目录图标 -->
-                <a href="/files?path=<%= file[:path] %>" class="directory">
-                  <i class="fas fa-folder"></i>
-                  <span><%= file[:name] %></span>
-                </a>
-              <% else %>
-                <!-- 如果是文件，则显示文件图标 -->
-                <div class="file">
-                  <i class="fas <%= file[:icon] %>"></i>
-                  <span><%= file[:name] %></span>
-                  <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
-                  <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
-                </div>
-              <% end %>
+  <!-- 文件浏览器 -->
+  <div class="file-browser">
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+      <%= link_to "根目录", files_path, data: { turbo_frame: "main_content" } %>
+      <% @current_path.split('/').reject(&:empty?).each_with_index do |dir, index| %>
+        <% current_path = '/' + @current_path.split('/')[0..index+1].join('/') %>
+        <span>/</span>
+        <%= link_to dir, files_path(path: current_path), data: { turbo_frame: "main_content" } %>
+      <% end %>
+    </div>
+    
+    <!-- 文件列表 -->
+    <div class="file-list">
+      <% @files.each do |file| %>
+        <div class="file-item">
+          <% if file[:is_directory] %>
+            <!-- 如果是目录，则显示目录图标 -->
+            <%= link_to files_path(path: file[:path]), class: "directory", data: { turbo_frame: "main_content" } do %>
+              <i class="fas fa-folder"></i>
+              <span><%= file[:name] %></span>
+            <% end %>
+          <% else %>
+            <!-- 如果是文件，则显示文件图标 -->
+            <div class="file">
+              <i class="fas <%= file[:icon] %>"></i>
+              <span><%= file[:name] %></span>
+              <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
+              <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
             </div>
           <% end %>
         </div>
-      </div>
+      <% end %>
     </div>
   </div>
-<% end %> 
+<% end %>

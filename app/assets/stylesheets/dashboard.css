@@ -2,6 +2,7 @@
   display: flex;
   min-height: 100vh;
   background-color: #f8f9fa;
+  position: relative;
 }
 
 .sidebar {
@@ -12,6 +13,7 @@
   left: 0;
   top: 0;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  z-index: 1000;
 }
 
 .sidebar-header {
@@ -55,7 +57,7 @@
   transition: all 0.3s ease;
 }
 
-.nav-item:hover {
+.nav-item:hover, .nav-item.active {
   background-color: #6c757d;
   color: #e9ecef;
   padding-left: 28px;
@@ -69,7 +71,7 @@
   transition: transform 0.3s ease;
 }
 
-.nav-item:hover i {
+.nav-item:hover i, .nav-item.active i {
   color: #3498db;
   transform: scale(1.1);
 }
@@ -83,10 +85,16 @@
   flex: 1;
   padding: 30px;
   margin-left: 260px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
 }
 
 .content-header {
   margin-bottom: 20px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .content-header h1 {

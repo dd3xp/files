@@ -1,25 +1,4 @@
-<div class="dashboard-container">
-  <!-- 左侧菜单栏 -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>文件传输系统</h2>
-    </div>
-
-    <!-- 左侧菜单栏按钮 -->
-    <div class="sidebar-buttons">
-      <a href="/files" class="<%= 'active' if current_page?('/files') %>">
-        <i class="fas fa-folder"></i>
-        <span>文件管理</span>
-      </a>
-      <a href="/terminal" class="<%= 'active' if current_page?('/terminal') %>">
-        <i class="fas fa-terminal"></i>
-        <span>终端操作</span>
-      </a>
-    </div>
-  </div>
-
-  <div class="main-content">
-    <h1><%= @title %></h1>
-    <p><%= @message %></p>
-  </div>
+<div class="content-header">
+  <h1><%= @title %></h1>
+  <p><%= @message %></p>
 </div>
