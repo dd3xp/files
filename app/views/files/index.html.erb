@@ -26,14 +26,12 @@
           <% @files.each do |file| %>
             <div class="file-item">
               <% if file[:is_directory] %>
-
                 <!-- 如果是目录，则显示目录图标 -->
                 <a href="/files?path=<%= file[:path] %>" class="directory">
                   <i class="fas fa-folder"></i>
                   <span><%= file[:name] %></span>
                 </a>
               <% else %>
-
                 <!-- 如果是文件，则显示文件图标 -->
                 <div class="file">
                   <i class="fas <%= file[:icon] %>"></i>

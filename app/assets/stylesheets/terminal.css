@@ -1,0 +1,134 @@
+/* 终端容器基本样式 */
+.terminal-container {
+  background: #2b2b2b;
+  color: #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 终端标题栏 */
+.terminal-header {
+  background: #1e1e1e;
+  padding: 0.5rem 1rem;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #3b3b3b;
+}
+
+.terminal-title {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.terminal-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.terminal-btn.close {
+  background: #ff5f56;
+}
+
+.terminal-btn.minimize {
+  background: #ffbd2e;
+}
+
+.terminal-btn.maximize {
+  background: #27c93f;
+}
+
+/* 终端内容区域 */
+.terminal-content {
+  flex: 1;
+  background: #1e1e1e;
+  padding: 1rem;
+  border-radius: 0 0 4px 4px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.terminal-line {
+  margin: 0;
+  padding: 0.2rem 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.terminal-line.prompt {
+  color: #4a9eff;
+}
+
+.terminal-line.command {
+  color: #e0e0e0;
+}
+
+.terminal-line.output {
+  color: #888;
+}
+
+.terminal-line.error {
+  color: #ff5f56;
+}
+
+/* 终端输入区域 */
+.terminal-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.terminal-prompt {
+  color: #4a9eff;
+  font-weight: bold;
+}
+
+.terminal-command-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9rem;
+  outline: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.terminal-command-input:focus {
+  background: #3b3b3b;
+}
+
+/* 滚动条样式 */
+.terminal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.terminal-content::-webkit-scrollbar-thumb {
+  background: #3b3b3b;
+  border-radius: 4px;
+}
+
+.terminal-content::-webkit-scrollbar-thumb:hover {
+  background: #4b4b4b;
+} 

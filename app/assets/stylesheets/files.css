@@ -115,6 +115,10 @@
   color: #1abc9c;
 }
 
+.file-item i.fa-file-alt {
+  color: #95a5a6;
+}
+
 .file-size {
   color: #6c757d;
   font-size: 0.9rem;
