@@ -38,11 +38,12 @@
 }
 
 .breadcrumb-actions {
-  margin-left: 20px;
-  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
-.upload-btn {
+.upload-btn, .refresh-btn {
   background: none;
   border: none;
   color: #3498db;
@@ -55,12 +56,12 @@
   transition: all 0.3s ease;
 }
 
-.upload-btn:hover {
+.upload-btn:hover, .refresh-btn:hover {
   background-color: #e8edf1fa;
   color: #2980b9;
 }
 
-.upload-btn i {
+.upload-btn i, .refresh-btn i {
   font-size: 1.2rem;
 }
 
