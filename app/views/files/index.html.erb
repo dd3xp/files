@@ -5,7 +5,7 @@
   </div>
 
   <!-- 文件浏览器 -->
-  <div class="file-browser">
+  <div class="file-browser" data-controller="file-preview">
     <!-- 面包屑导航 -->
     <div class="breadcrumb">
       <%= link_to "根目录", files_path, data: { turbo_frame: "main_content" } %>
@@ -27,16 +27,40 @@
               <span><%= file[:name] %></span>
             <% end %>
           <% else %>
-            <!-- 如果是文件，则显示文件图标 -->
+            <!-- 如果是文件，则显示文件图标和预览按钮 -->
             <div class="file">
-              <i class="fas <%= file[:icon] %>"></i>
-              <span><%= file[:name] %></span>
-              <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
-              <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
+              <div class="file-name-container">
+                <i class="fas <%= file[:icon] %> file-icon"></i>
+                <span class="file-text"><%= file[:name] %></span>
+              </div>
+              <div class="file-info-container">
+                <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
+                <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
+              </div>
+              <div class="file-actions-container">
+                <% if File.extname(file[:name]).downcase == '.txt' %>
+                  <button class="preview-btn" data-file-id="<%= file[:id] %>">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                <% end %>
+              </div>
             </div>
           <% end %>
         </div>
       <% end %>
+    </div>
+
+    <!-- 预览窗口 -->
+    <div class="modal" data-file-preview-target="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>文件预览</h2>
+          <button class="close-btn" data-file-preview-target="closeBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <pre data-file-preview-target="content"></pre>
+        </div>
+      </div>
     </div>
   </div>
 <% end %>

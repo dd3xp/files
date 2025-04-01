@@ -6,6 +6,21 @@ class FilesController < ApplicationController
     @files = get_files_in_directory(@current_path)
   end
 
+  def preview
+    begin
+      decoded_path = Base64.urlsafe_decode64(params[:id])
+      file_path = Rails.root.join('public', 'root', decoded_path.gsub(/^\/+/, ''))
+      if File.exist?(file_path) && File.extname(file_path).downcase == '.txt'
+        content = File.read(file_path)
+        render json: { content: content }
+      else
+        render json: { error: '文件不存在或不是文本文件' }, status: :not_found
+      end
+    rescue => e
+      render json: { error: '无效的文件路径' }, status: :bad_request
+    end
+  end
+
   private
 
   def get_files_in_directory(path)
@@ -18,6 +33,7 @@ class FilesController < ApplicationController
       {
         name: entry,
         path: File.join(path, entry),
+        id: Base64.urlsafe_encode64(File.join(path, entry)),
         is_directory: File.directory?(full_entry_path),
         size: File.size(full_entry_path),
         modified: File.mtime(full_entry_path),
