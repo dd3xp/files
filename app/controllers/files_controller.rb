@@ -10,11 +10,11 @@ class FilesController < ApplicationController
     begin
       decoded_path = Base64.urlsafe_decode64(params[:id])
       file_path = Rails.root.join('public', 'root', decoded_path.gsub(/^\/+/, ''))
-      if File.exist?(file_path) && File.extname(file_path).downcase == '.txt'
+      if File.exist?(file_path) && text_file?(file_path)
         content = File.read(file_path)
         render json: { content: content }
       else
-        render json: { error: '文件不存在或不是文本文件' }, status: :not_found
+        render json: { error: '文件不存在或不是可预览的文本文件' }, status: :not_found
       end
     rescue => e
       render json: { error: '无效的文件路径' }, status: :bad_request
@@ -22,6 +22,19 @@ class FilesController < ApplicationController
   end
 
   private
+
+  def text_file?(file_path)
+    # 可预览的文本文件扩展名列表
+    text_extensions = %w[
+      .txt .log .md .markdown .json .yml .yaml .xml .html .htm
+      .css .scss .sass .less .js .jsx .ts .tsx .vue .rb .py .php
+      .java .c .cpp .h .hpp .cs .go .rs .swift .kt .scala .sql
+      .sh .bash .zsh .fish .conf .ini .env .gitignore .dockerignore
+      .properties .toml .csv .tsv .diff .patch
+    ]
+    
+    text_extensions.include?(File.extname(file_path).downcase)
+  end
 
   def get_files_in_directory(path)
     full_path = Rails.root.join('public', 'root', path.gsub(/^\/+/, ''))
@@ -37,7 +50,8 @@ class FilesController < ApplicationController
         is_directory: File.directory?(full_entry_path),
         size: File.size(full_entry_path),
         modified: File.mtime(full_entry_path),
-        icon: get_file_icon(entry)
+        icon: get_file_icon(entry),
+        previewable: !File.directory?(full_entry_path) && text_file?(full_entry_path)
       }
     end.compact
   end

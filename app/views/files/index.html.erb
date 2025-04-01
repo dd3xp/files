@@ -21,12 +21,14 @@
       <% @files.each do |file| %>
         <div class="file-item">
           <% if file[:is_directory] %>
+
             <!-- 如果是目录，则显示目录图标 -->
             <%= link_to files_path(path: file[:path]), class: "directory", data: { turbo_frame: "main_content" } do %>
               <i class="fas fa-folder"></i>
               <span><%= file[:name] %></span>
             <% end %>
           <% else %>
+          
             <!-- 如果是文件，则显示文件图标和预览按钮 -->
             <div class="file">
               <div class="file-name-container">
@@ -38,7 +40,7 @@
                 <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
               </div>
               <div class="file-actions-container">
-                <% if File.extname(file[:name]).downcase == '.txt' %>
+                <% if file[:previewable] %>
                   <button class="preview-btn" data-file-id="<%= file[:id] %>">
                     <i class="fas fa-eye"></i>
                   </button>
