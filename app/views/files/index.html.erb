@@ -8,12 +8,20 @@
   <div class="file-browser" data-controller="file-preview">
     <!-- 面包屑导航 -->
     <div class="breadcrumb">
-      <%= link_to "根目录", files_path, data: { turbo_frame: "main_content" } %>
-      <% @current_path.split('/').reject(&:empty?).each_with_index do |dir, index| %>
-        <% current_path = '/' + @current_path.split('/')[0..index+1].join('/') %>
-        <span>/</span>
-        <%= link_to dir, files_path(path: current_path), data: { turbo_frame: "main_content" } %>
-      <% end %>
+      <div class="breadcrumb-path">
+        <%= link_to "根目录", files_path, data: { turbo_frame: "main_content" } %>
+        <% @current_path.split('/').reject(&:empty?).each_with_index do |dir, index| %>
+          <% current_path = '/' + @current_path.split('/')[0..index+1].join('/') %>
+          <span>/</span>
+          <%= link_to dir, files_path(path: current_path), data: { turbo_frame: "main_content" } %>
+        <% end %>
+      </div>
+      <div class="breadcrumb-actions" data-controller="file-upload">
+        <button class="upload-btn" data-action="click->file-upload#triggerFileInput">
+          <i class="fas fa-upload"></i>
+        </button>
+        <input type="file" data-file-upload-target="input" style="display: none" multiple>
+      </div>
     </div>
     
     <!-- 文件列表 -->

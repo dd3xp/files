@@ -6,6 +6,46 @@ class FilesController < ApplicationController
     @files = get_files_in_directory(@current_path)
   end
 
+  def upload
+    begin
+      Rails.logger.info "开始处理文件上传"
+      Rails.logger.info "上传路径参数: #{params[:path]}"
+      Rails.logger.info "文件参数: #{params[:files]&.map(&:original_filename)}"
+
+      upload_path = Rails.root.join('public', 'root', params[:path].to_s.sub(/^\//, ''))
+      Rails.logger.info "目标上传路径: #{upload_path}"
+
+      unless Dir.exist?(upload_path)
+        Rails.logger.info "创建目录: #{upload_path}"
+        FileUtils.mkdir_p(upload_path)
+      end
+
+      if params[:files].nil?
+        Rails.logger.warn "没有接收到文件"
+        render json: { error: '没有选择文件' }, status: :bad_request
+        return
+      end
+
+      uploaded_files = []
+      params[:files].each do |file|
+        file_path = File.join(upload_path, file.original_filename)
+        Rails.logger.info "正在保存文件: #{file_path}"
+        
+        File.open(file_path, 'wb') do |f|
+          f.write(file.read)
+        end
+        uploaded_files << file.original_filename
+      end
+
+      Rails.logger.info "文件上传成功: #{uploaded_files.join(', ')}"
+      render json: { message: '文件上传成功', files: uploaded_files }
+    rescue => e
+      Rails.logger.error "文件上传失败: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: { error: "文件上传失败: #{e.message}" }, status: :internal_server_error
+    end
+  end
+
   def preview
     begin
       decoded_path = Base64.urlsafe_decode64(params[:id])

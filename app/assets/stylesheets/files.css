@@ -11,21 +11,57 @@
   border-radius: 6px;
   margin-bottom: 20px;
   font-size: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.breadcrumb a {
+.breadcrumb-path {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.breadcrumb-path a {
   color: #3498db;
   text-decoration: none;
   margin: 0 5px;
+  white-space: nowrap;
 }
 
-.breadcrumb a:hover {
-  text-decoration: underline;
-}
-
-.breadcrumb span {
+.breadcrumb-path span {
   color: #6c757d;
   margin: 0 5px;
+  white-space: nowrap;
+}
+
+.breadcrumb-actions {
+  margin-left: 20px;
+  flex-shrink: 0;
+}
+
+.upload-btn {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+  background-color: #e8edf1fa;
+  color: #2980b9;
+}
+
+.upload-btn i {
+  font-size: 1.2rem;
 }
 
 .file-list {
