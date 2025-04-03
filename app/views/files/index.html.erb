@@ -5,7 +5,7 @@
   </div>
 
   <!-- 文件浏览器 -->
-  <div class="file-browser" data-controller="file-preview">
+  <div class="file-browser" data-controller="file-preview file-upload">
     <!-- 面包屑导航 -->
     <div class="breadcrumb">
       <div class="breadcrumb-path">
@@ -17,12 +17,10 @@
         <% end %>
       </div>
       <div class="breadcrumb-actions">
-        <div data-controller="file-upload">
-          <button class="upload-btn" data-action="click->file-upload#triggerFileInput">
-            <i class="fas fa-upload"></i>
-          </button>
-          <input type="file" data-file-upload-target="input" style="display: none" multiple>
-        </div>
+        <button class="upload-btn" data-action="click->file-upload#triggerFileInput">
+          <i class="fas fa-upload"></i>
+        </button>
+        <input type="file" data-file-upload-target="input" style="display: none" multiple>
         <div data-controller="file-refresh">
           <button class="refresh-btn" data-action="click->file-refresh#refresh">
             <i class="fas fa-sync-alt"></i>
@@ -30,37 +28,46 @@
         </div>
       </div>
     </div>
+
+    <!-- 上传进度条 -->
+    <div class="upload-progress" data-file-upload-target="progress" style="display: none;">
+      <div class="progress-files">
+        <!-- 进度条模板会在这里动态添加 -->
+      </div>
+    </div>
     
     <!-- 文件列表 -->
     <div class="file-list">
       <% @files.each do |file| %>
-        <div class="file-item">
+        <div class="file-item" data-controller="file-select">
           <% if file[:is_directory] %>
-
             <!-- 如果是目录，则显示目录图标 -->
-            <%= link_to files_path(path: file[:path]), class: "directory", data: { turbo_frame: "main_content" } do %>
-              <i class="fas fa-folder"></i>
-              <span><%= file[:name] %></span>
-            <% end %>
+            <div class="file-name-container">
+              <div class="file-selector">
+                <input type="checkbox" class="file-checkbox" data-file-select-target="checkbox" data-action="change->file-select#toggleSelection">
+              </div>
+              <i class="fas fa-folder file-icon"></i>
+              <%= link_to file[:name], files_path(path: file[:path]), class: "file-text", data: { turbo_frame: "main_content" } %>
+            </div>
           <% else %>
-          
             <!-- 如果是文件，则显示文件图标和预览按钮 -->
-            <div class="file">
-              <div class="file-name-container">
-                <i class="fas <%= file[:icon] %> file-icon"></i>
-                <span class="file-text"><%= file[:name] %></span>
+            <div class="file-name-container">
+              <div class="file-selector">
+                <input type="checkbox" class="file-checkbox" data-file-select-target="checkbox" data-action="change->file-select#toggleSelection">
               </div>
-              <div class="file-info-container">
-                <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
-                <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
-              </div>
-              <div class="file-actions-container">
-                <% if file[:previewable] %>
-                  <button class="preview-btn" data-file-id="<%= file[:id] %>">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                <% end %>
-              </div>
+              <i class="fas <%= file[:icon] %> file-icon"></i>
+              <span class="file-text"><%= file[:name] %></span>
+            </div>
+            <div class="file-info-container">
+              <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
+              <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
+            </div>
+            <div class="file-actions-container">
+              <% if file[:previewable] %>
+                <button class="preview-btn" data-controller="preview" data-action="click->preview#showPreview" data-preview-url-value="<%= files_preview_path(file: file[:path]) %>">
+                  <i class="fas fa-eye"></i>
+                </button>
+              <% end %>
             </div>
           <% end %>
         </div>

@@ -48,8 +48,7 @@ class FilesController < ApplicationController
 
   def preview
     begin
-      decoded_path = Base64.urlsafe_decode64(params[:id])
-      file_path = Rails.root.join('public', 'root', decoded_path.gsub(/^\/+/, ''))
+      file_path = Rails.root.join('public', 'root', params[:file].gsub(/^\/+/, ''))
       if File.exist?(file_path) && text_file?(file_path)
         content = File.read(file_path)
         render json: { content: content }
@@ -67,10 +66,10 @@ class FilesController < ApplicationController
     # 可预览的文本文件扩展名列表
     text_extensions = %w[
       .txt .log .md .markdown .json .yml .yaml .xml .html .htm
-      .css .scss .sass .less .js .jsx .ts .tsx .vue .rb .py .php
+      .css .scss .sass .less .js .jsx .ts .tsx .vue .rb, .erb .py .php
       .java .c .cpp .h .hpp .cs .go .rs .swift .kt .scala .sql
       .sh .bash .zsh .fish .conf .ini .env .gitignore .dockerignore
-      .properties .toml .csv .tsv .diff .patch
+      .properties .toml .csv .tsv .diff .patch .bat 
     ]
     
     text_extensions.include?(File.extname(file_path).downcase)
@@ -117,6 +116,8 @@ class FilesController < ApplicationController
       'fa-file-video'
     when '.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma'
       'fa-file-audio'
+    when '.bat'
+      'fa-file-code'
     when '.html', '.htm'
       'fa-file-code'
     when '.css'
@@ -127,7 +128,7 @@ class FilesController < ApplicationController
       'fa-file-code'
     when '.py'
       'fa-file-code'
-    when '.rb'
+    when '.rb', '.erb'
       'fa-file-code'
     when '.java'
       'fa-file-code'

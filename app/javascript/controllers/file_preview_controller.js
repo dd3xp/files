@@ -25,13 +25,13 @@ export default class extends Controller {
   }
 
   handlePreview(event) {
-    const fileId = event.currentTarget.dataset.fileId
-    this.fetchFileContent(fileId)
+    const previewUrl = event.currentTarget.dataset.previewUrlValue
+    this.fetchFileContent(previewUrl)
   }
 
-  async fetchFileContent(fileId) {
+  async fetchFileContent(previewUrl) {
     try {
-      const response = await fetch(`/files/${fileId}/preview`, {
+      const response = await fetch(previewUrl, {
         headers: {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest'

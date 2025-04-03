@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   post 'files/upload', to: 'files#upload'
   
   resources :files, only: [:index] do
-    member do
+    collection do
       get :preview
     end
   end
