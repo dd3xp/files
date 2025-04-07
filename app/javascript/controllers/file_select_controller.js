@@ -26,18 +26,23 @@ export default class extends Controller {
     const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
       .map(checkbox => {
         const fileItem = checkbox.closest('.file-item')
-        const fileName = fileItem.querySelector('.file-name').textContent
+        const fileName = fileItem.querySelector('.file-text').textContent
         const isDirectory = fileItem.querySelector('.fa-folder') !== null
+        const filePath = checkbox.value
         return {
           name: fileName,
           isDirectory: isDirectory,
+          path: filePath,
           element: fileItem
         }
       })
 
+    // 在控制台输出选中的文件
+    console.log('Selected files:', selectedFiles)
+
     // 触发自定义事件，通知其他控制器选中的文件已更新
     const event = new CustomEvent('selectedFilesUpdated', {
-      detail: { selectedFiles }
+      detail: { files: selectedFiles }
     })
     document.dispatchEvent(event)
   }

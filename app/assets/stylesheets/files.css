@@ -410,4 +410,132 @@ pre {
   width: 0;
   background-color: #3498db;
   transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  display: none;
+  position: fixed;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 4px 0;
+  min-width: 160px;
+  z-index: 1000;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.menu-item:hover {
+  background-color: #e8edf1fa;
+}
+
+.menu-item i {
+  margin-right: 12px;
+  font-size: 1.1rem;
+  width: 16px;
+  text-align: center;
+}
+
+.menu-item span {
+  flex: 1;
+}
+
+/* 自定义提示样式 */
+.custom-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  color: #fff;
+  font-size: 1rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.custom-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.custom-toast.success {
+  background-color: #2ecc71;
+}
+
+.custom-toast.error {
+  background-color: #e74c3c;
+}
+
+.custom-toast.info {
+  background-color: #3498db;
+}
+
+.custom-toast i {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+/* 操作按钮样式 */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.action-buttons.hidden {
+  display: none;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.copy-btn {
+  color: #2196F3;
+}
+
+.cut-btn {
+  color: #FF9800;
+}
+
+.delete-btn {
+  color: #F44336;
+}
+
+.paste-btn {
+  color: #4CAF50;
+}
+
+.action-btn i {
+  font-size: 16px;
 } 

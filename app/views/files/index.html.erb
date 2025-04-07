@@ -5,7 +5,7 @@
   </div>
 
   <!-- 文件浏览器 -->
-  <div class="file-browser" data-controller="file-preview file-upload">
+  <div class="file-browser" data-controller="file-preview file-upload file-copy file-cut file-delete file-paste file-context-menu">
     <!-- 面包屑导航 -->
     <div class="breadcrumb">
       <div class="breadcrumb-path">
@@ -35,25 +35,46 @@
         <!-- 进度条模板会在这里动态添加 -->
       </div>
     </div>
+
+    <!-- 删除进度条 -->
+    <div class="upload-progress" data-file-delete-target="progress" style="display: none;">
+      <div class="progress-files">
+        <!-- 进度条模板会在这里动态添加 -->
+      </div>
+    </div>
     
     <!-- 文件列表 -->
     <div class="file-list">
       <% @files.each do |file| %>
         <div class="file-item" data-controller="file-select">
+
           <% if file[:is_directory] %>
             <!-- 如果是目录，则显示目录图标 -->
             <div class="file-name-container">
               <div class="file-selector">
-                <input type="checkbox" class="file-checkbox" data-file-select-target="checkbox" data-action="change->file-select#toggleSelection">
+                <input type="checkbox" 
+                       class="file-checkbox" 
+                       data-file-select-target="checkbox" 
+                       data-action="change->file-select#toggleSelection"
+                       id="file-checkbox-<%= file[:id] %>"
+                       name="selected_files[]"
+                       value="<%= file[:path] %>">
               </div>
               <i class="fas fa-folder file-icon"></i>
               <%= link_to file[:name], files_path(path: file[:path]), class: "file-text", data: { turbo_frame: "main_content" } %>
             </div>
+            
           <% else %>
             <!-- 如果是文件，则显示文件图标和预览按钮 -->
             <div class="file-name-container">
               <div class="file-selector">
-                <input type="checkbox" class="file-checkbox" data-file-select-target="checkbox" data-action="change->file-select#toggleSelection">
+                <input type="checkbox" 
+                       class="file-checkbox" 
+                       data-file-select-target="checkbox" 
+                       data-action="change->file-select#toggleSelection"
+                       id="file-checkbox-<%= file[:id] %>"
+                       name="selected_files[]"
+                       value="<%= file[:path] %>">
               </div>
               <i class="fas <%= file[:icon] %> file-icon"></i>
               <span class="file-text"><%= file[:name] %></span>
@@ -64,7 +85,10 @@
             </div>
             <div class="file-actions-container">
               <% if file[:previewable] %>
-                <button class="preview-btn" data-controller="preview" data-action="click->preview#showPreview" data-preview-url-value="<%= files_preview_path(file: file[:path]) %>">
+                <button class="preview-btn" 
+                        data-controller="preview" 
+                        data-action="click->preview#showPreview" 
+                        data-preview-url-value="<%= files_preview_path(file: file[:path]) %>">
                   <i class="fas fa-eye"></i>
                 </button>
               <% end %>
@@ -84,6 +108,26 @@
         <div class="modal-body">
           <pre data-file-preview-target="content"></pre>
         </div>
+      </div>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div class="context-menu" data-file-context-menu-target="menu">
+      <div class="menu-item" data-action="click->file-copy#copy">
+        <i class="fas fa-copy"></i>
+        <span>复制</span>
+      </div>
+      <div class="menu-item" data-action="click->file-cut#cut">
+        <i class="fas fa-cut"></i>
+        <span>剪切</span>
+      </div>
+      <div class="menu-item" data-action="click->file-delete#delete">
+        <i class="fas fa-trash"></i>
+        <span>删除</span>
+      </div>
+      <div class="menu-item" data-action="click->file-paste#paste">
+        <i class="fas fa-paste"></i>
+        <span>粘贴</span>
       </div>
     </div>
   </div>
