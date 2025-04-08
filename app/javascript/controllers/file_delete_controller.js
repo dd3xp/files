@@ -62,8 +62,11 @@ export default class extends Controller {
           
           const currentPath = pathElements.length ? '/' + pathElements.join('/') : '/'
           
-          // 触发文件列表刷新事件
-          this.dispatch('refresh', { path: currentPath })
+          // 触发刷新事件
+          const refreshEvent = new CustomEvent('refresh', {
+            detail: { path: currentPath }
+          })
+          document.dispatchEvent(refreshEvent)
         }, 1000)
       } else {
         // 更新所有进度条为失败状态

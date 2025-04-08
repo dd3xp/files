@@ -95,8 +95,11 @@ export default class extends Controller {
             localStorage.removeItem('fileClipboard')
           }
 
-          // 触发文件列表刷新事件
-          this.dispatch('refresh', { path: currentPath })
+          // 触发刷新事件
+          const refreshEvent = new CustomEvent('refresh', {
+            detail: { path: currentPath }
+          })
+          document.dispatchEvent(refreshEvent)
         }
       } else {
         // 没有重名文件，直接执行粘贴
@@ -132,8 +135,11 @@ export default class extends Controller {
           localStorage.removeItem('fileClipboard')
         }
 
-        // 触发文件列表刷新事件
-        this.dispatch('refresh', { path: currentPath })
+        // 触发刷新事件
+        const refreshEvent = new CustomEvent('refresh', {
+          detail: { path: currentPath }
+        })
+        document.dispatchEvent(refreshEvent)
       }
     } catch (error) {
       console.error('Paste error:', error)
