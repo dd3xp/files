@@ -55,7 +55,15 @@ export default class extends Controller {
         // 延迟刷新页面
         setTimeout(() => {
           this.progressTarget.style.display = 'none'
-          window.Turbo.visit(window.location.href, { action: "replace" })
+          // 获取当前路径
+          const pathElements = Array.from(document.querySelectorAll('.breadcrumb-path a'))
+            .map(a => a.textContent.trim())
+            .filter(text => text !== '根目录')
+          
+          const currentPath = pathElements.length ? '/' + pathElements.join('/') : '/'
+          
+          // 触发文件列表刷新事件
+          this.dispatch('refresh', { path: currentPath })
         }, 1000)
       } else {
         // 更新所有进度条为失败状态

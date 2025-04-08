@@ -26,11 +26,12 @@ export default class extends Controller {
     })
   }
 
-  async paste() {
+  async paste(event) {
+    event.preventDefault()
     console.log('Paste method called, clipboard:', this.clipboard)
     
-    if (!this.clipboard || !this.clipboard.files || this.clipboard.files.length === 0) {
-      alert('请先复制或剪切文件')
+    if (!this.clipboard) {
+      this.showToast('请先复制或剪切文件', 'error')
       return
     }
 
@@ -38,139 +39,147 @@ export default class extends Controller {
     console.log('Current path:', currentPath)
 
     try {
-      // 首先检查目标文件夹中是否存在同名文件
-      const response = await fetch('/files/check_duplicates', {
+      // 先检查是否有重名文件
+      const checkResponse = await fetch('/files/check_duplicates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({
-          files: this.clipboard.files,
-          targetPath: currentPath
+          targetPath: currentPath,
+          files: this.clipboard.files
         })
       })
 
-      const result = await response.json()
-      console.log('Duplicate check result:', result)
+      if (checkResponse.status === 409) {
+        const result = await checkResponse.json()
+        console.log('Duplicate check result:', result)
+        
+        if (result.duplicate_files && result.duplicate_files.length > 0) {
+          const action = await this.handleDuplicateFiles(result.duplicate_files)
+          console.log('Selected action:', action)
+          if (!action) return // 用户取消了操作
+          
+          // 执行粘贴操作
+          const requestBody = {
+            targetPath: currentPath,
+            files: this.clipboard.files,
+            operation: this.clipboard.operation,
+            fileAction: action
+          }
+          console.log('Sending paste request:', requestBody)
 
-      if (result.duplicate_files && result.duplicate_files.length > 0) {
-        // 处理重名文件
-        const action = await this.handleDuplicateFiles(result.duplicate_files)
-        console.log('Selected action:', action)
-        if (action) {
-          // 重新发送请求，带上处理方式
-          await this.pasteWithAction(action)
+          const response = await fetch('/files/paste', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(requestBody)
+          })
+
+          if (!response.ok) {
+            throw new Error('粘贴失败')
+          }
+
+          const pasteResult = await response.json()
+          console.log('Paste result:', pasteResult)
+
+          // 显示结果消息
+          this.showToast(pasteResult.message, pasteResult.pasted.length > 0 ? 'success' : 'info')
+
+          // 如果是剪切操作，清空剪贴板
+          if (this.clipboard.operation === 'cut') {
+            this.clipboard = null
+            localStorage.removeItem('fileClipboard')
+          }
+
+          // 触发文件列表刷新事件
+          this.dispatch('refresh', { path: currentPath })
         }
-        return
-      }
-
-      // 如果没有重名文件，继续正常的粘贴操作
-      console.log('Sending paste request...')
-      const pasteResponse = await fetch('/files/paste', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-          files: this.clipboard.files,
+      } else {
+        // 没有重名文件，直接执行粘贴
+        const requestBody = {
           targetPath: currentPath,
+          files: this.clipboard.files,
           operation: this.clipboard.operation
+        }
+        console.log('Sending paste request:', requestBody)
+
+        const response = await fetch('/files/paste', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify(requestBody)
         })
-      })
 
-      console.log('Response status:', pasteResponse.status)
-      const pasteResult = await pasteResponse.json()
-      console.log('Response result:', pasteResult)
+        if (!response.ok) {
+          throw new Error('粘贴失败')
+        }
 
-      if (pasteResponse.ok) {
+        const result = await response.json()
+        console.log('Paste result:', result)
+
+        // 显示结果消息
+        this.showToast(result.message, result.pasted.length > 0 ? 'success' : 'info')
+
         // 如果是剪切操作，清空剪贴板
         if (this.clipboard.operation === 'cut') {
           this.clipboard = null
           localStorage.removeItem('fileClipboard')
         }
-        // 在当前文件夹刷新
-        const currentUrl = new URL(window.location.href)
-        currentUrl.searchParams.set('path', currentPath)
-        window.Turbo.visit(currentUrl.toString(), { action: "replace" })
-      } else {
-        alert(pasteResult.error || '粘贴失败')
+
+        // 触发文件列表刷新事件
+        this.dispatch('refresh', { path: currentPath })
       }
     } catch (error) {
-      console.error('Error:', error)
-      alert('粘贴文件时发生错误')
-    }
-  }
-
-  async pasteWithAction(action) {
-    const currentPath = this.getCurrentPath()
-    console.log('Pasting with action:', action)
-    try {
-      const response = await fetch('/files/paste', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-          files: this.clipboard.files,
-          targetPath: currentPath,
-          operation: this.clipboard.operation,
-          action: action
-        })
-      })
-
-      console.log('Response status:', response.status)
-      const result = await response.json()
-      console.log('Response result:', result)
-
-      if (response.ok) {
-        // 如果是剪切操作，清空剪贴板
-        if (this.clipboard.operation === 'cut') {
-          this.clipboard = null
-          localStorage.removeItem('fileClipboard')
-        }
-        // 在当前文件夹刷新
-        const currentUrl = new URL(window.location.href)
-        currentUrl.searchParams.set('path', currentPath)
-        window.Turbo.visit(currentUrl.toString(), { action: "replace" })
-      } else {
-        alert(result.error || '粘贴失败')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      alert('粘贴文件时发生错误')
+      console.error('Paste error:', error)
+      this.showToast(error.message, 'error')
     }
   }
 
   async handleDuplicateFiles(duplicateFiles) {
     console.log('Showing duplicate files dialog...')
-    const fileList = duplicateFiles.join('\n')
-    const message = `以下文件已存在：\n${fileList}\n\n请选择处理方式：\n1. 替换\n2. 跳过\n3. 同时存在`
-    
-    const choice = await this.showChoiceDialog(message)
+    const fileList = Array.isArray(duplicateFiles) 
+      ? duplicateFiles.map(file => `- ${file}`).join('\n')
+      : duplicateFiles
+
+    const choice = await this.showChoiceDialog(fileList)
     console.log('User choice:', choice)
+    
+    // 根据用户的选择返回对应的action
     switch (choice) {
       case 1:
+        console.log('Selected action: replace')
         return 'replace'
       case 2:
+        console.log('Selected action: skip')
         return 'skip'
       case 3:
+        console.log('Selected action: rename')
         return 'rename'
       default:
-        return null
+        console.log('No valid choice selected, defaulting to skip')
+        return 'skip'
     }
   }
 
-  showChoiceDialog(message) {
+  showChoiceDialog(fileList) {
     return new Promise((resolve) => {
       console.log('Creating choice dialog...')
       const dialog = document.createElement('div')
       dialog.className = 'choice-dialog'
+      
       dialog.innerHTML = `
         <div class="choice-dialog-content">
-          <div class="choice-dialog-message">${message.replace(/\n/g, '<br>')}</div>
+          <div class="choice-dialog-message">
+            <p>以下文件已存在：</p>
+            <pre>${fileList}</pre>
+            <p>请选择处理方式：</p>
+          </div>
           <div class="choice-dialog-buttons">
             <button class="choice-dialog-button" data-choice="1">替换</button>
             <button class="choice-dialog-button" data-choice="2">跳过</button>
@@ -204,10 +213,17 @@ export default class extends Controller {
         }
         .choice-dialog-message {
           margin-bottom: 30px;
-          white-space: pre-line;
           font-size: 18px;
           line-height: 1.6;
           color: #333;
+        }
+        .choice-dialog-message pre {
+          background: #f5f5f5;
+          padding: 10px;
+          border-radius: 4px;
+          margin: 10px 0;
+          white-space: pre-wrap;
+          word-break: break-all;
         }
         .choice-dialog-buttons {
           display: flex;
@@ -274,5 +290,74 @@ export default class extends Controller {
       .filter(text => text !== '根目录')
     
     return pathElements.length ? '/' + pathElements.join('/') : '/'
+  }
+
+  showToast(message, type = 'info') {
+    // 创建toast元素
+    const toast = document.createElement('div')
+    toast.className = `toast toast-${type}`
+    toast.textContent = message
+
+    // 添加样式
+    const style = document.createElement('style')
+    style.textContent = `
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      .toast-success {
+        background-color: #28a745;
+      }
+      .toast-error {
+        background-color: #dc3545;
+      }
+      .toast-info {
+        background-color: #17a2b8;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+    `
+    document.head.appendChild(style)
+
+    // 添加到页面
+    document.body.appendChild(toast)
+
+    // 3秒后自动消失
+    setTimeout(() => {
+      toast.style.animation = 'fadeOut 0.3s ease-out forwards'
+      setTimeout(() => {
+        // 检查元素是否仍然存在
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast)
+        }
+        if (document.head.contains(style)) {
+          document.head.removeChild(style)
+        }
+      }, 300)
+    }, 3000)
   }
 } 
