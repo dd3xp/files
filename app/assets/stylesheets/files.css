@@ -449,46 +449,6 @@ pre {
   flex: 1;
 }
 
-/* 自定义提示样式 */
-.custom-toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  color: #fff;
-  font-size: 1rem;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.custom-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.custom-toast.success {
-  background-color: #2ecc71;
-}
-
-.custom-toast.error {
-  background-color: #e74c3c;
-}
-
-.custom-toast.info {
-  background-color: #3498db;
-}
-
-.custom-toast i {
-  margin-right: 10px;
-  font-size: 1.2rem;
-}
-
 /* 操作按钮样式 */
 .action-buttons {
   display: flex;
@@ -641,49 +601,3 @@ pre {
 .choice-dialog-button[data-value="rename"]:hover {
   background: #218838;
 }
-
-/* Toast 提示样式 */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 24px;
-  border-radius: 8px;
-  color: white;
-  font-size: 14px;
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.toast-success {
-  background-color: #28a745;
-}
-
-.toast-error {
-  background-color: #dc3545;
-}
-
-.toast-info {
-  background-color: #17a2b8;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-} 

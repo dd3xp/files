@@ -1,0 +1,34 @@
+<%= stylesheet_link_tag "auth" %>
+
+<div class="login-container" data-controller="register">
+  <div class="login-box">
+    <h1>创建管理员账号</h1>
+
+    <%= form_with(url: users_path, local: false, class: "login-form", id: "register-form", data: { register_target: "form" }, novalidate: true) do |f| %>
+      <div class="form-group">
+        <%= f.label :username, "用户名" %>
+        <%= f.text_field :username, class: "form-control", required: true, autocomplete: "username", data: { action: "blur->register#validateField" } %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :password, "密码" %>
+        <%= f.password_field :password, class: "form-control", required: true, id: "password", autocomplete: "new-password", data: { register_target: "password", action: "blur->register#validateField" } %>
+        <small class="form-text">密码至少需要6个字符</small>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :password_confirmation, "确认密码" %>
+        <%= f.password_field :password_confirmation, class: "form-control", required: true, id: "password_confirmation", autocomplete: "new-password", data: { register_target: "passwordConfirmation", action: "blur->register#validateField" } %>
+      </div>
+
+      <div class="form-actions">
+        <%= f.submit "创建账号", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div id="toast" class="custom-toast" data-register-target="toast">
+    <i class="fas fa-exclamation-circle"></i>
+    <span id="toast-message" data-register-target="toastMessage"></span>
+  </div>
+</div> 

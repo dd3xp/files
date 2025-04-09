@@ -1,0 +1,41 @@
+/* 全局提示样式 */
+.custom-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+}
+
+.custom-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.custom-toast.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.custom-toast.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.custom-toast.info {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.custom-toast i {
+  font-size: 1.2em;
+} 

@@ -1,0 +1,106 @@
+/* 重置样式 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 登录容器样式 */
+.login-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* 登录框样式 */
+.login-box {
+  background: white;
+  padding: 60px;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+}
+
+/* 标题样式 */
+.login-box h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 50px;
+  font-size: 3em;
+}
+
+/* 表单样式 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+}
+
+/* 表单组样式 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 标签样式 */
+.form-group label {
+  font-size: 1.5em;
+  color: #555;
+  font-weight: 500;
+}
+
+/* 输入框样式 */
+.form-control {
+  padding: 20px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  font-size: 1.4em;
+  transition: border-color 0.3s ease;
+  width: 100%;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+/* 必填字段提示样式 */
+.form-control.is-invalid {
+  border-color: #e74c3c;
+}
+
+.form-control.is-invalid + .form-text {
+  color: #e74c3c;
+  font-size: 1.4em;
+  font-weight: 500;
+}
+
+/* 表单文本样式 */
+.form-text {
+  color: #666;
+  font-size: 1.2em;
+  margin-top: 8px;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  background: #3498db;
+  color: white;
+  padding: 20px 40px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.5em;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+} 

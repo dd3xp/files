@@ -8,11 +8,18 @@ Rails.application.routes.draw do
   post 'files/paste', to: 'files#paste'
   post 'files/check_duplicates', to: 'files#check_duplicates'
   
-  resources :files, only: [:index] do
+  resources :files, only: [:index, :show, :create, :destroy] do
     collection do
-      get :preview
+      get 'download/:id', to: 'files#download', as: :download
     end
   end
   get 'terminal', to: 'terminal#index'
   get 'dashboard', to: 'dashboard#index'
+  
+  # 用户认证相关路由
+  get 'login', to: 'sessions#new'
+  post 'login', to: 'sessions#create'
+  delete 'logout', to: 'sessions#destroy'
+  
+  resources :users, only: [:new, :create]
 end

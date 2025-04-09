@@ -238,15 +238,37 @@ export default class extends Controller {
   showToast(message, type = 'info') {
     // 创建toast元素
     const toast = document.createElement('div')
-    toast.className = `toast toast-${type}`
-    toast.textContent = message
-
+    toast.className = `custom-toast ${type}`
+    
+    // 添加图标
+    const icon = document.createElement('i')
+    if (type === 'success') {
+      icon.className = 'fas fa-check-circle'
+    } else if (type === 'error') {
+      icon.className = 'fas fa-exclamation-circle'
+    } else {
+      icon.className = 'fas fa-info-circle'
+    }
+    
+    // 添加消息文本
+    const messageSpan = document.createElement('span')
+    messageSpan.textContent = message
+    
+    // 组装toast
+    toast.appendChild(icon)
+    toast.appendChild(messageSpan)
+    
     // 添加到页面
     document.body.appendChild(toast)
-
+    
+    // 显示toast
+    setTimeout(() => {
+      toast.classList.add('show')
+    }, 10)
+    
     // 3秒后自动消失
     setTimeout(() => {
-      toast.style.animation = 'fadeOut 0.3s ease-out forwards'
+      toast.classList.remove('show')
       setTimeout(() => {
         // 检查元素是否仍然存在
         if (document.body.contains(toast)) {

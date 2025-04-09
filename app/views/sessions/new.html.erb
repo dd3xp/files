@@ -1,0 +1,29 @@
+<%= stylesheet_link_tag "auth" %>
+<%= stylesheet_link_tag "global" %>
+
+<div class="login-container" data-controller="login">
+  <div class="login-box">
+    <h1>登录</h1>
+
+    <%= form_with(url: login_path, local: false, class: "login-form", id: "login-form", data: { login_target: "form" }) do |f| %>
+      <div class="form-group">
+        <%= f.label :username, "用户名" %>
+        <%= f.text_field :username, class: "form-control", required: true, autocomplete: "username" %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :password, "密码" %>
+        <%= f.password_field :password, class: "form-control", required: true, autocomplete: "current-password" %>
+      </div>
+
+      <div class="form-actions">
+        <%= f.submit "登录", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div id="toast" class="custom-toast" data-login-target="toast">
+    <i class="fas fa-exclamation-circle"></i>
+    <span id="toast-message" data-login-target="toastMessage"></span>
+  </div>
+</div> 
