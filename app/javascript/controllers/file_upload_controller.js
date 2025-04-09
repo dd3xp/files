@@ -81,20 +81,13 @@ export default class extends Controller {
     return new Promise((resolve) => {
       const dialog = document.createElement('div')
       dialog.className = 'choice-dialog'
-      dialog.innerHTML = `
-        <div class="choice-dialog-content">
-          <h3>发现重名文件</h3>
-          <p>以下文件已存在：</p>
-          <pre>${fileList}</pre>
-          <p>请选择操作：</p>
-          <div class="choice-dialog-buttons">
-            <button class="choice-dialog-button" data-value="replace">替换</button>
-            <button class="choice-dialog-button" data-value="skip">跳过</button>
-            <button class="choice-dialog-button" data-value="rename">重命名</button>
-            <button class="choice-dialog-button" data-value="cancel">取消</button>
-          </div>
-        </div>
-      `
+      
+      // 获取模板
+      const template = document.getElementById('upload-duplicate-choice-dialog-template')
+      const content = template.content.cloneNode(true)
+      
+      // 设置文件列表
+      content.querySelector('#upload-duplicate-files-list').textContent = fileList
 
       // 添加点击遮罩层关闭对话框的功能
       dialog.addEventListener('click', (e) => {
@@ -104,6 +97,7 @@ export default class extends Controller {
         }
       })
 
+      dialog.appendChild(content)
       document.body.appendChild(dialog)
 
       // 处理按钮点击
@@ -120,15 +114,15 @@ export default class extends Controller {
   createProgressElement(fileName) {
     const progressFile = document.createElement('div')
     progressFile.className = 'progress-file'
-    progressFile.innerHTML = `
-      <div class="progress-file-info">
-        <span class="progress-file-name">${fileName}</span>
-        <span class="progress-file-percentage">0%</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill"></div>
-      </div>
-    `
+    
+    // 获取模板
+    const template = document.getElementById('progress-element-template')
+    const content = template.content.cloneNode(true)
+    
+    // 设置文件名
+    content.querySelector('.progress-file-name').textContent = fileName
+    
+    progressFile.appendChild(content)
     return progressFile
   }
 

@@ -1,0 +1,41 @@
+<!-- 重名文件对话框模板 -->
+<template id="duplicate-choice-dialog-template">
+  <div class="choice-dialog-content">
+    <h3>发现重名文件</h3>
+    <p>以下文件已存在：</p>
+    <pre id="duplicate-files-list"></pre>
+    <p>请选择操作：</p>
+    <div class="choice-dialog-buttons">
+      <button class="choice-dialog-button" data-value="replace">替换</button>
+      <button class="choice-dialog-button" data-value="skip">跳过</button>
+      <button class="choice-dialog-button" data-value="rename">重命名</button>
+    </div>
+  </div>
+</template>
+
+<!-- 上传重名文件对话框模板（包含取消按钮） -->
+<template id="upload-duplicate-choice-dialog-template">
+  <div class="choice-dialog-content">
+    <h3>发现重名文件</h3>
+    <p>以下文件已存在：</p>
+    <pre id="upload-duplicate-files-list"></pre>
+    <p>请选择操作：</p>
+    <div class="choice-dialog-buttons">
+      <button class="choice-dialog-button" data-value="replace">替换</button>
+      <button class="choice-dialog-button" data-value="skip">跳过</button>
+      <button class="choice-dialog-button" data-value="rename">重命名</button>
+      <button class="choice-dialog-button" data-value="cancel">取消</button>
+    </div>
+  </div>
+</template>
+
+<!-- 进度条模板 -->
+<template id="progress-element-template">
+  <div class="progress-file-info">
+    <span class="progress-file-name"></span>
+    <span class="progress-file-percentage">处理中...</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-bar-fill" style="width: 100%; background-color: #3498db;"></div>
+  </div>
+</template> 

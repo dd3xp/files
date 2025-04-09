@@ -4,6 +4,9 @@
     <p><%= @message %></p>
   </div>
 
+  <!-- 引入模板文件 -->
+  <%= render 'files/templates' %>
+
   <!-- 文件浏览器 -->
   <div class="file-browser" data-controller="file-preview file-upload file-copy file-cut file-delete file-paste file-context-menu">
     <!-- 面包屑导航 -->

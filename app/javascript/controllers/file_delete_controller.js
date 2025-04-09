@@ -84,15 +84,15 @@ export default class extends Controller {
   createProgressElement(fileName) {
     const progressFile = document.createElement('div')
     progressFile.className = 'progress-file'
-    progressFile.innerHTML = `
-      <div class="progress-file-info">
-        <span class="progress-file-name">${fileName}</span>
-        <span class="progress-file-percentage">处理中...</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" style="width: 100%; background-color: #3498db;"></div>
-      </div>
-    `
+    
+    // 获取模板
+    const template = document.getElementById('progress-element-template')
+    const content = template.content.cloneNode(true)
+    
+    // 设置文件名
+    content.querySelector('.progress-file-name').textContent = fileName
+    
+    progressFile.appendChild(content)
     return progressFile
   }
 
