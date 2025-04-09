@@ -11,6 +11,7 @@ class FilesController < ApplicationController
       Rails.logger.info "开始处理文件上传"
       Rails.logger.info "上传路径参数: #{params[:path]}"
       Rails.logger.info "文件参数: #{params[:files]&.map(&:original_filename)}"
+      Rails.logger.info "文件操作参数: #{params[:fileAction]}"
 
       upload_path = Rails.root.join('public', 'root', params[:path].to_s.sub(/^\//, ''))
       Rails.logger.info "目标上传路径: #{upload_path}"
@@ -27,18 +28,72 @@ class FilesController < ApplicationController
       end
 
       uploaded_files = []
+      skipped_files = []
+      failed_files = []
+
       params[:files].each do |file|
         file_path = File.join(upload_path, file.original_filename)
-        Rails.logger.info "正在保存文件: #{file_path}"
+        Rails.logger.info "正在处理文件: #{file_path}"
         
-        File.open(file_path, 'wb') do |f|
-          f.write(file.read)
+        if File.exist?(file_path)
+          case params[:fileAction]&.to_s&.downcase
+          when 'replace'
+            Rails.logger.info "替换已存在的文件: #{file_path}"
+            File.open(file_path, 'wb') do |f|
+              f.write(file.read)
+            end
+            uploaded_files << file.original_filename
+          when 'skip'
+            Rails.logger.info "跳过已存在的文件: #{file_path}"
+            skipped_files << file.original_filename
+          when 'rename'
+            Rails.logger.info "重命名文件: #{file_path}"
+            base_name = File.basename(file.original_filename, '.*')
+            extension = File.extname(file.original_filename)
+            counter = 1
+            new_file_path = file_path
+            while File.exist?(new_file_path)
+              new_name = "#{base_name}(#{counter})#{extension}"
+              new_file_path = File.join(upload_path, new_name)
+              counter += 1
+            end
+            Rails.logger.info "新文件路径: #{new_file_path}"
+            File.open(new_file_path, 'wb') do |f|
+              f.write(file.read)
+            end
+            uploaded_files << File.basename(new_file_path)
+          else
+            Rails.logger.warn "未指定文件操作方式，跳过文件: #{file_path}"
+            skipped_files << file.original_filename
+          end
+        else
+          Rails.logger.info "保存新文件: #{file_path}"
+          File.open(file_path, 'wb') do |f|
+            f.write(file.read)
+          end
+          uploaded_files << file.original_filename
         end
-        uploaded_files << file.original_filename
       end
 
-      Rails.logger.info "文件上传成功: #{uploaded_files.join(', ')}"
-      render json: { message: '文件上传成功', files: uploaded_files }
+      message = if uploaded_files.any?
+        if skipped_files.any?
+          "文件上传成功，跳过了 #{skipped_files.length} 个文件"
+        else
+          "文件上传成功"
+        end
+      elsif skipped_files.any?
+        "已跳过 #{skipped_files.length} 个文件"
+      else
+        "上传失败"
+      end
+
+      Rails.logger.info "文件上传完成: #{message}"
+      render json: { 
+        message: message,
+        uploaded: uploaded_files,
+        skipped: skipped_files,
+        failed: failed_files
+      }
     rescue => e
       Rails.logger.error "文件上传失败: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")

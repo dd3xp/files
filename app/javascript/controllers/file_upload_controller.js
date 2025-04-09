@@ -15,7 +15,7 @@ export default class extends Controller {
     this.inputTarget.addEventListener('change', (event) => this.handleFileSelect(event))
   }
 
-  handleFileSelect(event) {
+  async handleFileSelect(event) {
     const files = event.target.files
     if (!files.length) return
 
@@ -26,14 +26,94 @@ export default class extends Controller {
     
     const currentPath = pathElements.length ? '/' + pathElements.join('/') : '/'
 
-    // 显示进度条容器
-    this.progressTarget.style.display = 'block'
-    const progressFiles = this.progressTarget.querySelector('.progress-files')
-    progressFiles.innerHTML = '' // 清空现有进度条
+    try {
+      // 先检查是否有重名文件
+      const checkResponse = await fetch('/files/check_duplicates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          targetPath: currentPath,
+          files: Array.from(files).map(file => ({
+            path: file.name
+          }))
+        })
+      })
 
-    // 为每个文件创建进度条并上传
-    Array.from(files).forEach(file => {
-      this.uploadSingleFile(file, currentPath, progressFiles)
+      let fileAction = null
+      if (checkResponse.status === 409) {
+        const result = await checkResponse.json()
+        console.log('Duplicate check result:', result)
+        
+        if (result.duplicate_files && result.duplicate_files.length > 0) {
+          fileAction = await this.showChoiceDialog(result.duplicate_files)
+          console.log('Selected action:', fileAction)
+          if (fileAction === null) {
+            console.log('Upload cancelled by user')
+            return
+          }
+        }
+      }
+
+      // 显示进度条容器
+      this.progressTarget.style.display = 'block'
+      const progressFiles = this.progressTarget.querySelector('.progress-files')
+      progressFiles.innerHTML = '' // 清空现有进度条
+
+      // 为每个文件创建进度条并上传
+      Array.from(files).forEach(file => {
+        this.uploadSingleFile(file, currentPath, progressFiles, fileAction)
+      })
+    } catch (error) {
+      console.error('Error checking duplicates:', error)
+      alert('检查重名文件失败')
+    }
+  }
+
+  async showChoiceDialog(duplicateFiles) {
+    console.log('Showing duplicate files dialog...')
+    const fileList = Array.isArray(duplicateFiles) 
+      ? duplicateFiles.map(file => `- ${file}`).join('\n')
+      : duplicateFiles
+
+    return new Promise((resolve) => {
+      const dialog = document.createElement('div')
+      dialog.className = 'choice-dialog'
+      dialog.innerHTML = `
+        <div class="choice-dialog-content">
+          <h3>发现重名文件</h3>
+          <p>以下文件已存在：</p>
+          <pre>${fileList}</pre>
+          <p>请选择操作：</p>
+          <div class="choice-dialog-buttons">
+            <button class="choice-dialog-button" data-value="replace">替换</button>
+            <button class="choice-dialog-button" data-value="skip">跳过</button>
+            <button class="choice-dialog-button" data-value="rename">重命名</button>
+            <button class="choice-dialog-button" data-value="cancel">取消</button>
+          </div>
+        </div>
+      `
+
+      // 添加点击遮罩层关闭对话框的功能
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          document.body.removeChild(dialog)
+          resolve(null)
+        }
+      })
+
+      document.body.appendChild(dialog)
+
+      // 处理按钮点击
+      dialog.querySelectorAll('.choice-dialog-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const value = button.dataset.value
+          document.body.removeChild(dialog)
+          resolve(value === 'cancel' ? null : value)
+        })
+      })
     })
   }
 
@@ -52,7 +132,7 @@ export default class extends Controller {
     return progressFile
   }
 
-  uploadSingleFile(file, currentPath, progressFiles) {
+  uploadSingleFile(file, currentPath, progressFiles, fileAction = null) {
     // 创建进度条元素
     const progressElement = this.createProgressElement(file.name)
     progressFiles.appendChild(progressElement)
@@ -64,6 +144,9 @@ export default class extends Controller {
     const formData = new FormData()
     formData.append('files[]', file)
     formData.append('path', currentPath)
+    if (fileAction) {
+      formData.append('fileAction', fileAction)
+    }
 
     // 创建 XHR 请求
     const xhr = new XMLHttpRequest()
