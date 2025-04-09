@@ -60,6 +60,21 @@ export default class extends Controller {
           const action = await this.handleDuplicateFiles(result.duplicate_files)
           console.log('Selected action:', action)
           if (!action) return // 用户取消了操作
+
+          // 如果用户选择替换，检查源文件和目标文件是否相同
+          if (action === 'replace') {
+            const sourceFiles = this.clipboard.files
+            const isSameLocation = sourceFiles.every(file => {
+              const sourcePath = file.path
+              const targetPath = currentPath === '/' ? `/${file.name}` : `${currentPath}/${file.name}`
+              return sourcePath === targetPath
+            })
+
+            if (isSameLocation) {
+              this.showToast('源文件和目标位置相同，无需替换', 'info')
+              return
+            }
+          }
           
           // 执行粘贴操作
           const requestBody = {
@@ -153,18 +168,18 @@ export default class extends Controller {
       ? duplicateFiles.map(file => `- ${file}`).join('\n')
       : duplicateFiles
 
-    const choice = await this.showChoiceDialog(fileList)
+    const choice = await this.showDuplicateChoiceDialog(fileList)
     console.log('User choice:', choice)
     
     // 根据用户的选择返回对应的action
     switch (choice) {
-      case 1:
+      case 'replace':
         console.log('Selected action: replace')
         return 'replace'
-      case 2:
+      case 'skip':
         console.log('Selected action: skip')
         return 'skip'
-      case 3:
+      case 'rename':
         console.log('Selected action: rename')
         return 'rename'
       default:
@@ -173,120 +188,47 @@ export default class extends Controller {
     }
   }
 
-  showChoiceDialog(fileList) {
+  async showDuplicateChoiceDialog(duplicateFiles) {
+    console.log('Showing duplicate files dialog...')
+    const fileList = Array.isArray(duplicateFiles) 
+      ? duplicateFiles.map(file => `- ${file}`).join('\n')
+      : duplicateFiles
+
     return new Promise((resolve) => {
-      console.log('Creating choice dialog...')
       const dialog = document.createElement('div')
       dialog.className = 'choice-dialog'
-      
       dialog.innerHTML = `
         <div class="choice-dialog-content">
-          <div class="choice-dialog-message">
-            <p>以下文件已存在：</p>
-            <pre>${fileList}</pre>
-            <p>请选择处理方式：</p>
-          </div>
+          <h3>发现重名文件</h3>
+          <p>以下文件已存在：</p>
+          <pre>${fileList}</pre>
+          <p>请选择操作：</p>
           <div class="choice-dialog-buttons">
-            <button class="choice-dialog-button" data-choice="1">替换</button>
-            <button class="choice-dialog-button" data-choice="2">跳过</button>
-            <button class="choice-dialog-button" data-choice="3">同时存在</button>
+            <button class="choice-dialog-button" data-value="replace">替换</button>
+            <button class="choice-dialog-button" data-value="skip">跳过</button>
+            <button class="choice-dialog-button" data-value="rename">重命名</button>
           </div>
         </div>
       `
 
-      // 添加样式
-      const style = document.createElement('style')
-      style.textContent = `
-        .choice-dialog {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-        .choice-dialog-content {
-          background: white;
-          padding: 30px;
-          border-radius: 16px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-          max-width: 500px;
-          width: 90%;
-        }
-        .choice-dialog-message {
-          margin-bottom: 30px;
-          font-size: 18px;
-          line-height: 1.6;
-          color: #333;
-        }
-        .choice-dialog-message pre {
-          background: #f5f5f5;
-          padding: 10px;
-          border-radius: 4px;
-          margin: 10px 0;
-          white-space: pre-wrap;
-          word-break: break-all;
-        }
-        .choice-dialog-buttons {
-          display: flex;
-          justify-content: center;
-          gap: 20px;
-        }
-        .choice-dialog-button {
-          padding: 12px 24px;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: 500;
-          transition: all 0.2s ease;
-          min-width: 100px;
-        }
-        .choice-dialog-button[data-choice="1"] {
-          background: #dc3545;
-          color: white;
-        }
-        .choice-dialog-button[data-choice="2"] {
-          background: #6c757d;
-          color: white;
-        }
-        .choice-dialog-button[data-choice="3"] {
-          background: #28a745;
-          color: white;
-        }
-        .choice-dialog-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .choice-dialog-button[data-choice="1"]:hover {
-          background: #c82333;
-        }
-        .choice-dialog-button[data-choice="2"]:hover {
-          background: #5a6268;
-        }
-        .choice-dialog-button[data-choice="3"]:hover {
-          background: #218838;
-        }
-      `
-      document.head.appendChild(style)
-
-      // 添加事件监听
+      // 添加点击遮罩层关闭对话框的功能
       dialog.addEventListener('click', (e) => {
-        if (e.target.classList.contains('choice-dialog-button')) {
-          const choice = parseInt(e.target.dataset.choice)
-          console.log('Dialog button clicked:', choice)
+        if (e.target === dialog) {
           document.body.removeChild(dialog)
-          document.head.removeChild(style)
-          resolve(choice)
+          resolve('skip') // 点击遮罩层时默认选择跳过
         }
       })
 
       document.body.appendChild(dialog)
-      console.log('Choice dialog added to document')
+
+      // 处理按钮点击
+      dialog.querySelectorAll('.choice-dialog-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const value = button.dataset.value
+          document.body.removeChild(dialog)
+          resolve(value)
+        })
+      })
     })
   }
 
