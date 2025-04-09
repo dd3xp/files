@@ -246,51 +246,6 @@ export default class extends Controller {
     toast.className = `toast toast-${type}`
     toast.textContent = message
 
-    // 添加样式
-    const style = document.createElement('style')
-    style.textContent = `
-      .toast {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 24px;
-        border-radius: 8px;
-        color: white;
-        font-size: 14px;
-        z-index: 1000;
-        animation: slideIn 0.3s ease-out;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-      .toast-success {
-        background-color: #28a745;
-      }
-      .toast-error {
-        background-color: #dc3545;
-      }
-      .toast-info {
-        background-color: #17a2b8;
-      }
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-      @keyframes fadeOut {
-        from {
-          opacity: 1;
-        }
-        to {
-          opacity: 0;
-        }
-      }
-    `
-    document.head.appendChild(style)
-
     // 添加到页面
     document.body.appendChild(toast)
 
@@ -301,9 +256,6 @@ export default class extends Controller {
         // 检查元素是否仍然存在
         if (document.body.contains(toast)) {
           document.body.removeChild(toast)
-        }
-        if (document.head.contains(style)) {
-          document.head.removeChild(style)
         }
       }, 300)
     }, 3000)
