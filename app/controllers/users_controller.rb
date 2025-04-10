@@ -36,20 +36,4 @@ class UsersController < ApplicationController
       end
     end
   end
-
-  def settings
-  end
-
-  def update_password
-    user = User.find_by_username(current_user)
-    if user&.authenticate(params[:current_password])
-      if User.save_user(user.username, params[:new_password])
-        redirect_to settings_path, notice: '密码修改成功'
-      else
-        redirect_to settings_path, alert: '新密码不符合要求'
-      end
-    else
-      redirect_to settings_path, alert: '当前密码错误'
-    end
-  end
 end 

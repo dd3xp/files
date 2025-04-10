@@ -48,11 +48,43 @@ export default class extends Controller {
         }
       })
 
+      // 检查响应状态
       if (response.ok) {
-        window.location.href = response.url
+        // 如果响应是重定向
+        if (response.redirected) {
+          this.showToast('注册成功', 'success')
+          setTimeout(() => {
+            window.location.href = response.url
+          }, 1000)
+          return
+        }
+        
+        // 尝试解析 JSON 响应
+        try {
+          const data = await response.json()
+          if (data && data.success) {
+            this.showToast('注册成功', 'success')
+            setTimeout(() => {
+              window.location.href = data.redirect_url || '/'
+            }, 1000)
+            return
+          }
+        } catch (e) {
+          // 如果不是 JSON 响应，可能是 HTML 重定向
+          this.showToast('注册成功', 'success')
+          setTimeout(() => {
+            window.location.href = response.url
+          }, 1000)
+          return
+        }
       } else {
+        // 处理错误响应
         const data = await response.json()
-        this.showToast(data.error || '注册失败，请重试', 'error')
+        if (data && data.error) {
+          this.showToast(data.error, 'error')
+        } else {
+          this.showToast('注册失败，请重试', 'error')
+        }
       }
     } catch (error) {
       console.error('Error:', error)
