@@ -94,6 +94,9 @@ export default class extends Controller {
 
   showToast(message, type) {
     this.toastMessageTarget.textContent = message
+    // 先移除所有可能的类型类
+    this.toastTarget.classList.remove('success', 'error')
+    // 添加新的类型类
     this.toastTarget.classList.add(type, 'show')
     
     setTimeout(() => {

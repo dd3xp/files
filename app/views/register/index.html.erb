@@ -4,7 +4,7 @@
   <div class="login-box">
     <h1>创建管理员账号</h1>
 
-    <%= form_with(url: users_path, local: false, class: "login-form", id: "register-form", data: { register_target: "form" }, novalidate: true) do |f| %>
+    <%= form_with(url: register_path, local: false, class: "login-form", id: "register-form", data: { register_target: "form" }, novalidate: true) do |f| %>
       <div class="form-group">
         <%= f.label :username, "用户名" %>
         <%= f.text_field :username, class: "form-control", required: true, autocomplete: "username", data: { action: "blur->register#validateField" } %>

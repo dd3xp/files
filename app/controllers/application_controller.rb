@@ -13,7 +13,7 @@ class ApplicationController < ActionController::Base
 
   def authenticate_user!
     unless current_user
-      redirect_to login_path, alert: '请先登录'
+      redirect_to login_path
       return
     end
     
@@ -23,7 +23,7 @@ class ApplicationController < ActionController::Base
       # 用户不存在，清除会话和 cookie
       session.delete(:user_id)
       cookies.delete(:user_id)
-      redirect_to login_path, alert: '用户不存在，请重新登录'
+      redirect_to login_path
     end
   end
 
