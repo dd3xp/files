@@ -13,6 +13,15 @@ export default class extends Controller {
     this.formTarget.addEventListener('submit', this.handleSubmit.bind(this))
   }
 
+  validateField(event) {
+    const field = event.target
+    if (field.value.trim() === '') {
+      field.classList.add('is-invalid')
+    } else {
+      field.classList.remove('is-invalid')
+    }
+  }
+
   checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search)
     const error = urlParams.get('error')
@@ -80,6 +89,20 @@ export default class extends Controller {
 
   showToast(message, type) {
     this.toastMessageTarget.textContent = message
+    
+    // 更新图标
+    const iconElement = this.toastTarget.querySelector('i')
+    if (type === 'success') {
+      iconElement.className = 'fas fa-check-circle'
+    } else if (type === 'error') {
+      iconElement.className = 'fas fa-exclamation-circle'
+    } else {
+      iconElement.className = 'fas fa-info-circle'
+    }
+    
+    // 先移除所有可能的类型类
+    this.toastTarget.classList.remove('success', 'error')
+    // 添加新的类型类
     this.toastTarget.classList.add(type, 'show')
     
     setTimeout(() => {
