@@ -1,18 +1,35 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Connects to data-controller="login"
+/**
+ * 登录控制器
+ * 处理用户登录、表单验证和提示消息
+ */
 export default class extends Controller {
   static targets = ["form", "toast", "toastMessage"]
 
+  /**
+   * 初始化控制器
+   * 在控制器连接到 DOM 时自动调用
+   * 设置事件监听和检查 URL 参数
+   */
   connect() {
     this.setupEventListeners()
     this.checkUrlParams()
   }
 
+  /**
+   * 设置表单提交事件监听
+   * 监听登录表单的提交事件
+   */
   setupEventListeners() {
     this.formTarget.addEventListener('submit', this.handleSubmit.bind(this))
   }
 
+  /**
+   * 验证输入字段
+   * @param {Event} event - 输入事件对象
+   * 检查字段是否为空并显示验证状态
+   */
   validateField(event) {
     const field = event.target
     if (field.value.trim() === '') {
@@ -22,6 +39,10 @@ export default class extends Controller {
     }
   }
 
+  /**
+   * 检查 URL 参数
+   * 从 URL 中获取错误参数并显示错误消息
+   */
   checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search)
     const error = urlParams.get('error')
@@ -31,6 +52,11 @@ export default class extends Controller {
     }
   }
 
+  /**
+   * 处理表单提交
+   * @param {Event} event - 提交事件对象
+   * 发送登录请求并处理响应
+   */
   async handleSubmit(event) {
     event.preventDefault()
     
@@ -43,9 +69,7 @@ export default class extends Controller {
         }
       })
 
-      // 检查响应状态
       if (response.ok) {
-        // 如果响应是重定向
         if (response.redirected) {
           this.showToast('登录成功', 'success')
           setTimeout(() => {
@@ -54,7 +78,6 @@ export default class extends Controller {
           return
         }
         
-        // 尝试解析 JSON 响应
         try {
           const data = await response.json()
           if (data && data.success) {
@@ -65,7 +88,6 @@ export default class extends Controller {
             return
           }
         } catch (e) {
-          // 如果不是 JSON 响应，可能是 HTML 重定向
           this.showToast('登录成功', 'success')
           setTimeout(() => {
             window.location.href = response.url
@@ -73,7 +95,6 @@ export default class extends Controller {
           return
         }
       } else {
-        // 处理错误响应
         const data = await response.json()
         if (data && data.error) {
           this.showToast(data.error, 'error')
@@ -87,10 +108,15 @@ export default class extends Controller {
     }
   }
 
+  /**
+   * 显示提示消息
+   * @param {string} message - 提示消息内容
+   * @param {string} type - 提示类型（success/error/info）
+   * 在页面顶部显示临时提示框
+   */
   showToast(message, type) {
     this.toastMessageTarget.textContent = message
     
-    // 更新图标
     const iconElement = this.toastTarget.querySelector('i')
     if (type === 'success') {
       iconElement.className = 'fas fa-check-circle'
@@ -100,9 +126,7 @@ export default class extends Controller {
       iconElement.className = 'fas fa-info-circle'
     }
     
-    // 先移除所有可能的类型类
     this.toastTarget.classList.remove('success', 'error')
-    // 添加新的类型类
     this.toastTarget.classList.add(type, 'show')
     
     setTimeout(() => {

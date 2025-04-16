@@ -1,17 +1,32 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Connects to data-controller="register"
+/**
+ * 用户注册控制器
+ * 处理用户注册表单的提交和验证
+ */
 export default class extends Controller {
   static targets = ["form", "password", "passwordConfirmation", "toast", "toastMessage"]
 
+  /**
+   * 初始化控制器
+   * 在控制器连接到DOM时调用
+   */
   connect() {
     this.setupEventListeners()
   }
 
+  /**
+   * 设置表单提交事件监听
+   * 监听表单的submit事件
+   */
   setupEventListeners() {
     this.formTarget.addEventListener('submit', this.handleSubmit.bind(this))
   }
 
+  /**
+   * 验证输入字段
+   * @param {Event} event - 输入事件对象，包含触发事件的输入框信息
+   */
   validateField(event) {
     const field = event.target
     if (field.value.trim() === '') {
@@ -21,19 +36,21 @@ export default class extends Controller {
     }
   }
 
+  /**
+   * 处理表单提交
+   * @param {Event} event - 提交事件对象，包含表单提交的信息
+   */
   async handleSubmit(event) {
     event.preventDefault()
     
     const password = this.passwordTarget.value
     const passwordConfirmation = this.passwordConfirmationTarget.value
     
-    // 先检查密码是否匹配
     if (password !== passwordConfirmation) {
       this.showToast('两次输入的密码不匹配', 'error')
       return
     }
     
-    // 再检查密码长度
     if (password.length < 6) {
       this.showToast('密码长度至少需要6个字符', 'error')
       return
@@ -48,9 +65,7 @@ export default class extends Controller {
         }
       })
 
-      // 检查响应状态
       if (response.ok) {
-        // 如果响应是重定向
         if (response.redirected) {
           this.showToast('注册成功', 'success')
           setTimeout(() => {
@@ -59,7 +74,6 @@ export default class extends Controller {
           return
         }
         
-        // 尝试解析 JSON 响应
         try {
           const data = await response.json()
           if (data && data.success) {
@@ -70,7 +84,6 @@ export default class extends Controller {
             return
           }
         } catch (e) {
-          // 如果不是 JSON 响应，可能是 HTML 重定向
           this.showToast('注册成功', 'success')
           setTimeout(() => {
             window.location.href = response.url
@@ -78,7 +91,6 @@ export default class extends Controller {
           return
         }
       } else {
-        // 处理错误响应
         const data = await response.json()
         if (data && data.error) {
           this.showToast(data.error, 'error')
@@ -92,11 +104,14 @@ export default class extends Controller {
     }
   }
 
+  /**
+   * 显示提示消息
+   * @param {string} message - 要显示的消息内容
+   * @param {string} type - 消息类型，可以是'success'或'error'
+   */
   showToast(message, type) {
     this.toastMessageTarget.textContent = message
-    // 先移除所有可能的类型类
     this.toastTarget.classList.remove('success', 'error')
-    // 添加新的类型类
     this.toastTarget.classList.add(type, 'show')
     
     setTimeout(() => {

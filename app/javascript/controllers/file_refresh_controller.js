@@ -1,47 +1,55 @@
 import { Controller } from "@hotwired/stimulus"
 
+/**
+ * 文件列表刷新控制器
+ * 处理文件列表的刷新操作
+ */
 export default class extends Controller {
   static targets = ["button"]
 
+  /**
+   * 初始化
+   * 监听其他组件发出的刷新事件
+   */
   connect() {
-    // 监听刷新事件
     document.addEventListener('refresh', (event) => {
       this.refreshWithPath(event.detail.path)
     })
   }
 
+  /**
+   * 刷新当前目录
+   * 添加刷新按钮旋转动画
+   */
   refresh() {
-    // 添加旋转动画
     const refreshIcon = document.querySelector('.refresh-btn i')
     refreshIcon.style.transition = 'transform 1s'
     refreshIcon.style.transform = 'rotate(360deg)'
 
-    // 获取当前路径
     const pathElements = Array.from(document.querySelectorAll('.breadcrumb-path a'))
       .map(a => a.textContent.trim())
       .filter(text => text !== '根目录')
     
     const currentPath = pathElements.length ? '/' + pathElements.join('/') : '/'
 
-    // 使用 Turbo 刷新当前页面，保持在当前目录
     window.Turbo.visit(`/files?path=${encodeURIComponent(currentPath)}`, { action: "replace" })
     
-    // 延迟重置旋转动画
     setTimeout(() => {
       refreshIcon.style.transform = 'rotate(0deg)'
     }, 1000)
   }
 
+  /**
+   * 刷新指定路径
+   * @param {string} path - 要刷新的目录路径
+   */
   refreshWithPath(path) {
-    // 添加旋转动画
     const refreshIcon = document.querySelector('.refresh-btn i')
     refreshIcon.style.transition = 'transform 1s'
     refreshIcon.style.transform = 'rotate(360deg)'
 
-    // 使用 Turbo 刷新当前页面，保持在当前目录
     window.Turbo.visit(`/files?path=${encodeURIComponent(path)}`, { action: "replace" })
     
-    // 延迟重置旋转动画
     setTimeout(() => {
       refreshIcon.style.transform = 'rotate(0deg)'
     }, 1000)
