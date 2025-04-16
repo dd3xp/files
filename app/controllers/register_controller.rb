@@ -1,18 +1,18 @@
 class RegisterController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :create]
-  layout 'auth', only: [:index, :create]
+  layout 'auth'
 
   def index
-    redirect_to login_path unless User.load_users.empty?
+    result = RegisterModel.handle_index
+    redirect_to login_path if result[:redirect]
   end
 
   def create
-    if User.save_user(params[:username], params[:password])
-      session[:user_id] = params[:username]
-      cookies.permanent[:user_id] = params[:username]
-      render json: { success: true, redirect_url: root_path }
-    else
-      render json: { error: '创建账号失败' }, status: :unprocessable_entity
-    end
+    result = RegisterModel.handle_register(
+      params[:username], 
+      params[:password], 
+      params[:password_confirmation]
+    )
+    render json: result, status: result[:status]
   end
 end 

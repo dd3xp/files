@@ -338,4 +338,118 @@ class FilesModel
     
     { duplicate_files: duplicate_files }
   end
+
+  # 处理文件上传
+  def self.handle_upload(path, files, file_action)
+    Rails.logger.info "开始处理文件上传"
+    Rails.logger.info "上传路径参数: #{path}"
+    Rails.logger.info "文件参数: #{files&.map(&:original_filename)}"
+    Rails.logger.info "文件操作参数: #{file_action}"
+
+    if files.nil?
+      Rails.logger.warn "没有接收到文件"
+      return { error: '没有选择文件', status: :bad_request }
+    end
+
+    upload_path = Rails.root.join('public', 'root', path.to_s.sub(/^\//, ''))
+    Rails.logger.info "目标上传路径: #{upload_path}"
+
+    begin
+      result = upload_files(upload_path, files, file_action)
+      result[:status] = :ok
+      result
+    rescue => e
+      Rails.logger.error "文件上传失败: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      { error: "文件上传失败: #{e.message}", status: :internal_server_error }
+    end
+  end
+
+  # 处理文件预览
+  def self.handle_preview(file)
+    begin
+      file_path = get_file_path(file)
+      if file_exists?(file_path) && text_file?(file_path)
+        content = read_file_content(file_path)
+        { content: content, status: :ok }
+      else
+        { error: '文件不存在或不是可预览的文本文件', status: :not_found }
+      end
+    rescue => e
+      { error: '无效的文件路径', status: :bad_request }
+    end
+  end
+
+  # 处理文件删除
+  def self.handle_delete(paths)
+    if paths.blank?
+      return { error: '没有选择要删除的文件', status: :bad_request }
+    end
+
+    begin
+      result = delete_files(paths)
+      deleted_files = result[:deleted]
+      failed_files = result[:failed]
+
+      if failed_files.any?
+        {
+          message: '部分文件删除成功',
+          deleted: deleted_files,
+          failed: failed_files,
+          status: :partial_content
+        }
+      else
+        {
+          message: '文件删除成功',
+          deleted: deleted_files,
+          status: :ok
+        }
+      end
+    rescue => e
+      Rails.logger.error "文件删除失败: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      { error: "文件删除失败: #{e.message}", status: :internal_server_error }
+    end
+  end
+
+  # 处理文件粘贴
+  def self.handle_paste(target_path, files, operation, file_action)
+    Rails.logger.info "=== Raw Parameters ==="
+    Rails.logger.info "target_path: #{target_path}"
+    Rails.logger.info "files: #{files.inspect}"
+    Rails.logger.info "operation: #{operation}"
+    Rails.logger.info "file_action: #{file_action}"
+
+    begin
+      result = paste_files(target_path, files, operation, file_action)
+      if result[:status] == :conflict
+        { duplicate_files: result[:duplicate_files], status: :conflict }
+      else
+        result[:status] = :ok
+        result
+      end
+    rescue => e
+      Rails.logger.error "文件粘贴失败: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      { error: "文件粘贴失败: #{e.message}", status: :internal_server_error }
+    end
+  end
+
+  # 处理重名文件检查
+  def self.handle_check_duplicates(target_path, files)
+    begin
+      result = check_duplicates(target_path, files)
+      duplicate_files = result[:duplicate_files]
+      
+      if duplicate_files.any?
+        { duplicate_files: duplicate_files, status: :conflict }
+      else
+        { duplicate_files: [], status: :ok }
+      end
+    rescue => e
+      Rails.logger.error "检查重名文件失败: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      { error: "检查重名文件失败: #{e.message}", status: :internal_server_error }
+    end
+  end
 end 
