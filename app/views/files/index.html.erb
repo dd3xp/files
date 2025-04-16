@@ -8,7 +8,7 @@
   <%= render 'files/templates' %>
 
   <!-- 文件浏览器 -->
-  <div class="file-browser" data-controller="file-preview file-upload file-copy file-cut file-delete file-paste file-context-menu">
+  <div class="file-browser" data-controller="file-preview file-upload file-copy file-cut file-delete file-paste file-context-menu file-download">
     <!-- 面包屑导航 -->
     <div class="breadcrumb">
       <div class="breadcrumb-path">
@@ -124,13 +124,17 @@
         <i class="fas fa-cut"></i>
         <span>剪切</span>
       </div>
-      <div class="menu-item" data-action="click->file-delete#delete">
-        <i class="fas fa-trash"></i>
-        <span>删除</span>
-      </div>
       <div class="menu-item" data-action="click->file-paste#paste">
         <i class="fas fa-paste"></i>
         <span>粘贴</span>
+      </div>
+      <div class="menu-item" data-action="click->file-download#download" data-file-download-target="downloadButton">
+        <i class="fas fa-download"></i>
+        <span>下载</span>
+      </div>
+      <div class="menu-item" data-action="click->file-delete#delete">
+        <i class="fas fa-trash"></i>
+        <span>删除</span>
       </div>
     </div>
   </div>

@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus"
  * 处理文件列表中的右键菜单显示和操作
  */
 export default class extends Controller {
-  static targets = ["menu"]
+  static targets = ["menu", "pasteButton"]
 
   /**
    * 初始化控制器
@@ -13,6 +13,7 @@ export default class extends Controller {
    */
   connect() {
     this.setupEventListeners()
+    console.log('Context menu controller connected')
   }
 
   /**
@@ -27,42 +28,33 @@ export default class extends Controller {
 
     this.element.addEventListener('contextmenu', (event) => {
       event.preventDefault()
-      this.showContextMenu(event)
+      this.showMenu(event)
     })
 
-    document.addEventListener('click', () => {
-      this.hideContextMenu()
-    })
+    document.addEventListener('click', this.hideMenu.bind(this))
+    document.addEventListener('selectedFilesUpdated', this.updateMenuButtons.bind(this))
   }
 
   /**
    * 显示右键菜单
    * @param {Event} event - 右键点击事件对象
    */
-  showContextMenu(event) {
+  showMenu(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
     const menu = this.menuTarget
     menu.style.display = 'block'
-    
-    const x = event.clientX
-    const y = event.clientY
-    const menuWidth = menu.offsetWidth
-    const menuHeight = menu.offsetHeight
-    const windowWidth = window.innerWidth
-    const windowHeight = window.innerHeight
+    menu.style.left = `${event.pageX}px`
+    menu.style.top = `${event.pageY}px`
 
-    const left = x + menuWidth > windowWidth ? x - menuWidth : x
-    const top = y + menuHeight > windowHeight ? y - menuHeight : y
-
-    menu.style.left = `${left}px`
-    menu.style.top = `${top}px`
-
-    this.updateMenuItems()
+    this.updateMenuButtons()
   }
 
   /**
    * 隐藏右键菜单
    */
-  hideContextMenu() {
+  hideMenu() {
     this.menuTarget.style.display = 'none'
   }
 
@@ -70,18 +62,22 @@ export default class extends Controller {
    * 更新菜单项显示状态
    * 根据文件选择状态显示或隐藏菜单项
    */
-  updateMenuItems() {
-    const hasSelection = this.selectedFiles && this.selectedFiles.length > 0
-    console.log('Updating menu items, has selection:', hasSelection)
+  updateMenuButtons() {
+    console.log('Updating menu buttons')
+    const selectedFiles = document.querySelectorAll('.file-checkbox:checked')
+    const hasSelectedFiles = selectedFiles.length > 0
+    console.log('Selected files:', selectedFiles.length)
 
-    const copyItem = this.menuTarget.querySelector('[data-action="click->file-copy#copy"]')
-    const cutItem = this.menuTarget.querySelector('[data-action="click->file-cut#cut"]')
-    const deleteItem = this.menuTarget.querySelector('[data-action="click->file-delete#delete"]')
-    const pasteItem = this.menuTarget.querySelector('[data-action="click->file-paste#paste"]')
+    if (this.hasPasteButtonTarget) {
+      console.log('Paste button found, updating visibility')
+      this.pasteButtonTarget.style.display = hasSelectedFiles ? 'block' : 'none'
+    } else {
+      console.log('Paste button target not found')
+    }
+  }
 
-    if (copyItem) copyItem.style.display = hasSelection ? 'flex' : 'none'
-    if (cutItem) cutItem.style.display = hasSelection ? 'flex' : 'none'
-    if (deleteItem) deleteItem.style.display = hasSelection ? 'flex' : 'none'
-    if (pasteItem) pasteItem.style.display = 'flex'
+  disconnect() {
+    document.removeEventListener('click', this.hideMenu.bind(this))
+    document.removeEventListener('selectedFilesUpdated', this.updateMenuButtons.bind(this))
   }
 } 

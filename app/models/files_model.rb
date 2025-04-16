@@ -1,4 +1,10 @@
 require 'securerandom'
+require 'zip'
+
+# 设置 ZIP 文件名的编码
+Zip.force_entry_names_encoding = 'UTF-8'
+# 设置 ZIP 文件名使用 Unicode
+Zip.unicode_names = true
 
 class FilesModel
   # 可预览的文本文件扩展名列表
@@ -451,5 +457,141 @@ class FilesModel
       Rails.logger.error e.backtrace.join("\n")
       { error: "检查重名文件失败: #{e.message}", status: :internal_server_error }
     end
+  end
+
+  def self.handle_download(paths)
+    if paths.blank?
+      return { error: '没有选择要下载的文件', status: :bad_request }
+    end
+
+    begin
+      # 如果只选择了一个文件且不是目录，直接下载
+      if paths.size == 1
+        path = paths.first
+        file_path = get_file_path(path)
+        if File.directory?(file_path)
+          return download_directory(file_path)
+        else
+          return download_file(file_path)
+        end
+      end
+
+      # 如果选择了多个文件或包含目录，创建压缩包
+      download_multiple_files(paths)
+    rescue => e
+      Rails.logger.error "文件下载失败: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      { error: "文件下载失败: #{e.message}", status: :internal_server_error }
+    end
+  end
+
+  def self.download_file(file_path)
+    if File.exist?(file_path)
+      {
+        file_path: file_path,
+        file_name: File.basename(file_path),
+        content_type: get_content_type(file_path),
+        status: :ok
+      }
+    else
+      { error: '文件不存在', status: :not_found }
+    end
+  end
+
+  def self.download_directory(dir_path)
+    if File.directory?(dir_path)
+      zip_path = create_zip_from_directory(dir_path)
+      {
+        file_path: zip_path,
+        file_name: "#{File.basename(dir_path)}.zip",
+        content_type: 'application/zip',
+        status: :ok
+      }
+    else
+      { error: '目录不存在', status: :not_found }
+    end
+  end
+
+  def self.download_multiple_files(paths)
+    temp_dir = Rails.root.join('tmp', 'downloads')
+    FileUtils.mkdir_p(temp_dir)
+    
+    zip_path = File.join(temp_dir, "download_#{Time.now.to_i}.zip")
+    
+    Zip::File.open(zip_path, Zip::File::CREATE) do |zipfile|
+      paths.each do |path|
+        file_path = get_file_path(path)
+        if File.directory?(file_path)
+          add_directory_to_zip(zipfile, file_path)
+        else
+          add_file_to_zip(zipfile, file_path)
+        end
+      end
+    end
+
+    {
+      file_path: zip_path,
+      file_name: "download_#{Time.now.to_i}.zip",
+      content_type: 'application/zip',
+      status: :ok
+    }
+  end
+
+  def self.add_directory_to_zip(zipfile, dir_path)
+    Dir.glob("#{dir_path}/**/**").each do |file|
+      next if File.directory?(file)
+      file_in_zip = file.sub("#{Rails.root}/public/root/", '')
+      # 使用 UTF-8 编码处理文件名，并确保路径分隔符统一
+      file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
+      # 使用 add 方法，并设置编码
+      zipfile.add(file_in_zip, file) { |entry| entry.encoding = 'UTF-8' }
+    end
+  end
+
+  def self.add_file_to_zip(zipfile, file_path)
+    file_in_zip = file_path.sub("#{Rails.root}/public/root/", '')
+    # 使用 UTF-8 编码处理文件名，并确保路径分隔符统一
+    file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
+    # 使用 add 方法，并设置编码
+    zipfile.add(file_in_zip, file_path) { |entry| entry.encoding = 'UTF-8' }
+  end
+
+  def self.get_content_type(file_path)
+    extension = File.extname(file_path).downcase
+    case extension
+    when '.jpg', '.jpeg'
+      'image/jpeg'
+    when '.png'
+      'image/png'
+    when '.gif'
+      'image/gif'
+    when '.pdf'
+      'application/pdf'
+    when '.doc', '.docx'
+      'application/msword'
+    when '.xls', '.xlsx'
+      'application/vnd.ms-excel'
+    when '.ppt', '.pptx'
+      'application/vnd.ms-powerpoint'
+    when '.zip'
+      'application/zip'
+    else
+      'application/octet-stream'
+    end
+  end
+
+  def self.create_zip_from_directory(dir_path)
+    temp_dir = Rails.root.join('tmp', 'downloads')
+    FileUtils.mkdir_p(temp_dir)
+    
+    # 使用 UTF-8 编码处理压缩包名称
+    zip_name = "#{File.basename(dir_path).force_encoding('UTF-8')}_#{Time.now.to_i}.zip"
+    zip_path = File.join(temp_dir, zip_name)
+    
+    Zip::File.open(zip_path, Zip::File::CREATE) do |zipfile|
+      add_directory_to_zip(zipfile, dir_path)
+    end
+
+    zip_path
   end
 end 

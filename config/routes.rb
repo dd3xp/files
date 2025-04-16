@@ -16,11 +16,9 @@ Rails.application.routes.draw do
   post 'files/delete', to: 'files#delete'
   post 'files/paste', to: 'files#paste'
   post 'files/check_duplicates', to: 'files#check_duplicates'
-  resources :files, only: [:index, :show, :create, :destroy] do
-    collection do
-      get 'download/:id', to: 'files#download', as: :download
-    end
-  end
+  get 'files/download', to: 'files#download'
+  post 'files/download_multiple', to: 'files#download_multiple'
+  resources :files, only: [:index, :show, :create, :destroy]
 
   # 终端管理相关路由
   get 'terminal', to: 'terminal#index'
