@@ -17,10 +17,8 @@ class ApplicationController < ActionController::Base
       return
     end
     
-    # 验证用户是否存在于 users.yml 文件中
     users = User.load_users
     unless users.key?(current_user)
-      # 用户不存在，清除会话和 cookie
       session.delete(:user_id)
       cookies.delete(:user_id)
       redirect_to login_path
