@@ -1,9 +1,7 @@
 require 'securerandom'
 require 'zip'
 
-# 设置 ZIP 文件名的编码
 Zip.force_entry_names_encoding = 'UTF-8'
-# 设置 ZIP 文件名使用 Unicode
 Zip.unicode_names = true
 
 class FilesModel
@@ -332,7 +330,7 @@ class FilesModel
   def self.add_directory_to_zip(zipfile, dir_path)
     Dir.glob("#{dir_path}/**/**").each do |file|
       next if File.directory?(file)
-      file_in_zip = file.sub("#{Rails.root}/public/root/", '')
+      file_in_zip = file.to_s.sub("#{Rails.root}/public/root/", '')
       file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
       zipfile.add(file_in_zip, file) { |entry| entry.encoding = 'UTF-8' }
     end
@@ -340,7 +338,7 @@ class FilesModel
 
   # 添加文件到压缩包
   def self.add_file_to_zip(zipfile, file_path)
-    file_in_zip = file_path.sub("#{Rails.root}/public/root/", '')
+    file_in_zip = file_path.to_s.sub("#{Rails.root}/public/root/", '')
     file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
     zipfile.add(file_in_zip, file_path) { |entry| entry.encoding = 'UTF-8' }
   end

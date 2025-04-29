@@ -1,4 +1,6 @@
 class FilesController < ApplicationController
+  skip_before_action :verify_authenticity_token, only: [:download_multiple]
+
   def index
     @title = "文件管理"
     @message = "文件管理页面"
