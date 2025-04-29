@@ -11,5 +11,9 @@
       <i class="fas fa-terminal"></i>
       <span>终端操作</span>
     <% end %>
+    <%= link_to settings_path, class: "nav-item #{'active' if request.path.start_with?('/settings')}" do %>
+      <i class="fas fa-cog"></i>
+      <span>设置</span>
+    <% end %>
   </div>
 </div> 

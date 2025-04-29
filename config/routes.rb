@@ -26,4 +26,6 @@ Rails.application.routes.draw do
   # 仪表盘相关路由
   get 'dashboard', to: 'dashboard#index'
   
+  # 设置相关路由
+  get 'settings', to: 'settings#index'
 end
