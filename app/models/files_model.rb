@@ -14,7 +14,7 @@ class FilesModel
 
   # 判断文件是否为可预览的文本文件
   def self.text_file?(file_path)
-    TEXT_EXTENSIONS.include?(File.extname(file_path).downcase)
+    TEXT_EXTENSIONS.include?(File.extname(file_path.to_s).downcase)
   end
 
   # 获取指定目录下的所有文件和文件夹
@@ -72,9 +72,21 @@ class FilesModel
     end
   end
 
+  # 获取文件路径
+  def self.get_file_path(path)
+    clean_path = path.to_s.gsub(/^\/+/, '')
+    Rails.root.join('public', 'root', clean_path)
+  end
+
+  # 检查文件是否存在
+  def self.file_exists?(path)
+    File.exist?(get_file_path(path))
+  end
+
   # 读取文件内容
   def self.read_file_content(file_path)
-    File.read(file_path) if File.exist?(file_path) && text_file?(file_path)
+    return nil unless File.exist?(file_path) && text_file?(file_path)
+    File.read(file_path.to_s).force_encoding('UTF-8')
   end
 
   # 删除文件或目录
@@ -99,27 +111,9 @@ class FilesModel
     { deleted: deleted_files, failed: failed_files }
   end
 
-  # 检查文件是否存在
-  def self.file_exists?(path)
-    file_path = Rails.root.join('public', 'root', path.gsub(/^\/+/, ''))
-    File.exist?(file_path)
-  end
-
-  # 获取文件路径
-  def self.get_file_path(path)
-    Rails.root.join('public', 'root', path.gsub(/^\/+/, ''))
-  end
-
   # 上传文件
   def self.upload_files(upload_path, files, file_action)
-    Rails.logger.info "开始处理文件上传"
-    Rails.logger.info "上传路径: #{upload_path}"
-    Rails.logger.info "文件数量: #{files&.size}"
-    Rails.logger.info "文件操作: #{file_action}"
-
-    # 确保上传目录存在
     unless Dir.exist?(upload_path)
-      Rails.logger.info "创建目录: #{upload_path}"
       FileUtils.mkdir_p(upload_path)
     end
 
@@ -129,21 +123,17 @@ class FilesModel
 
     files.each do |file|
       file_path = File.join(upload_path, file.original_filename)
-      Rails.logger.info "正在处理文件: #{file_path}"
       
       if File.exist?(file_path)
         case file_action&.to_s&.downcase
         when 'replace'
-          Rails.logger.info "替换已存在的文件: #{file_path}"
           File.open(file_path, 'wb') do |f|
             f.write(file.read)
           end
           uploaded_files << file.original_filename
         when 'skip'
-          Rails.logger.info "跳过已存在的文件: #{file_path}"
           skipped_files << file.original_filename
         when 'rename'
-          Rails.logger.info "重命名文件: #{file_path}"
           base_name = File.basename(file.original_filename, '.*')
           extension = File.extname(file.original_filename)
           counter = 1
@@ -153,17 +143,14 @@ class FilesModel
             new_file_path = File.join(upload_path, new_name)
             counter += 1
           end
-          Rails.logger.info "新文件路径: #{new_file_path}"
           File.open(new_file_path, 'wb') do |f|
             f.write(file.read)
           end
           uploaded_files << File.basename(new_file_path)
         else
-          Rails.logger.warn "未指定文件操作方式，跳过文件: #{file_path}"
           skipped_files << file.original_filename
         end
       else
-        Rails.logger.info "保存新文件: #{file_path}"
         File.open(file_path, 'wb') do |f|
           f.write(file.read)
         end
@@ -183,7 +170,6 @@ class FilesModel
       "上传失败"
     end
 
-    Rails.logger.info "文件上传完成: #{message}"
     { 
       message: message,
       uploaded: uploaded_files,
@@ -194,29 +180,6 @@ class FilesModel
 
   # 粘贴文件
   def self.paste_files(target_path, files, operation, file_action)
-    Rails.logger.info "=== Paste Operation Start ==="
-    Rails.logger.info "Parameters:"
-    Rails.logger.info "  target_path: #{target_path}"
-    Rails.logger.info "  operation: #{operation}"
-    Rails.logger.info "  file_action: #{file_action.inspect}"
-    Rails.logger.info "  files: #{files.inspect}"
-
-    # 检查重名文件
-    duplicate_files = []
-    files.each do |file|
-      file_name = File.basename(file[:path])
-      target_file = File.join('public/root', target_path, file_name)
-      if File.exist?(target_file)
-        duplicate_files << file_name
-        Rails.logger.info "Found duplicate file: #{file_name}"
-      end
-    end
-
-    if duplicate_files.any? && file_action.nil?
-      Rails.logger.info "Found duplicates but no action specified, returning conflict"
-      return { duplicate_files: duplicate_files, status: :conflict }
-    end
-
     pasted_files = []
     failed_files = []
     skipped_files = []
@@ -225,38 +188,24 @@ class FilesModel
       source_path = File.join('public/root', file[:path])
       file_name = File.basename(file[:path])
       target_file = File.join('public/root', target_path, file_name)
-
-      Rails.logger.info "=== Processing file: #{file_name} ==="
-      Rails.logger.info "  source_path: #{source_path}"
-      Rails.logger.info "  target_file: #{target_file}"
-      Rails.logger.info "  file_action: #{file_action.inspect}"
-
       # 处理重名文件
       if File.exist?(target_file)
-        Rails.logger.info "  File exists, handling with action: #{file_action.inspect}"
         case file_action.to_s.downcase
         when 'replace'
-          Rails.logger.info "  Replacing file..."
           begin
             FileUtils.rm(target_file)
             if operation == 'copy'
-              Rails.logger.info "  Copying file..."
               FileUtils.cp(source_path, target_file)
             else
-              Rails.logger.info "  Moving file..."
               FileUtils.mv(source_path, target_file)
             end
             pasted_files << File.basename(target_file)
-            Rails.logger.info "  File replaced successfully"
           rescue => e
-            Rails.logger.error "  Error replacing file: #{e.message}"
             failed_files << file_name
           end
         when 'skip'
-          Rails.logger.info "  Skipping file..."
           skipped_files << file_name
         when 'rename'
-          Rails.logger.info "  Renaming file..."
           begin
             base_name = File.basename(file_name, '.*')
             extension = File.extname(file_name)
@@ -267,38 +216,27 @@ class FilesModel
               new_target_file = File.join('public/root', target_path, new_name)
               counter += 1
             end
-            Rails.logger.info "  New file name: #{File.basename(new_target_file)}"
             if operation == 'copy'
-              Rails.logger.info "  Copying file..."
               FileUtils.cp(source_path, new_target_file)
             else
-              Rails.logger.info "  Moving file..."
               FileUtils.mv(source_path, new_target_file)
             end
             pasted_files << File.basename(new_target_file)
-            Rails.logger.info "  File renamed successfully"
           rescue => e
-            Rails.logger.error "  Error renaming file: #{e.message}"
             failed_files << file_name
           end
         else
-          Rails.logger.info "  No valid action specified (#{file_action.inspect}), skipping file"
           skipped_files << file_name
         end
       else
-        Rails.logger.info "  File doesn't exist, performing direct operation"
         begin
           if operation == 'copy'
-            Rails.logger.info "  Copying file..."
             FileUtils.cp(source_path, target_file)
           else
-            Rails.logger.info "  Moving file..."
             FileUtils.mv(source_path, target_file)
           end
           pasted_files << File.basename(target_file)
-          Rails.logger.info "  Operation completed successfully"
         rescue => e
-          Rails.logger.error "  Error performing operation: #{e.message}"
           failed_files << file_name
         end
       end
@@ -315,13 +253,6 @@ class FilesModel
     else
       message = '粘贴失败'
     end
-
-    Rails.logger.info "=== Paste Operation Complete ==="
-    Rails.logger.info "Result:"
-    Rails.logger.info "  message: #{message}"
-    Rails.logger.info "  pasted: #{pasted_files.inspect}"
-    Rails.logger.info "  skipped: #{skipped_files.inspect}"
-    Rails.logger.info "  failed: #{failed_files.inspect}"
 
     { 
       message: message,
@@ -342,176 +273,37 @@ class FilesModel
       end
     end
     
-    { duplicate_files: duplicate_files }
+    duplicate_files
   end
 
-  # 处理文件上传
-  def self.handle_upload(path, files, file_action)
-    Rails.logger.info "开始处理文件上传"
-    Rails.logger.info "上传路径参数: #{path}"
-    Rails.logger.info "文件参数: #{files&.map(&:original_filename)}"
-    Rails.logger.info "文件操作参数: #{file_action}"
-
-    if files.nil?
-      Rails.logger.warn "没有接收到文件"
-      return { error: '没有选择文件', status: :bad_request }
-    end
-
-    upload_path = Rails.root.join('public', 'root', path.to_s.sub(/^\//, ''))
-    Rails.logger.info "目标上传路径: #{upload_path}"
-
-    begin
-      result = upload_files(upload_path, files, file_action)
-      result[:status] = :ok
-      result
-    rescue => e
-      Rails.logger.error "文件上传失败: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      { error: "文件上传失败: #{e.message}", status: :internal_server_error }
-    end
-  end
-
-  # 处理文件预览
-  def self.handle_preview(file)
-    begin
-      file_path = get_file_path(file)
-      if file_exists?(file_path) && text_file?(file_path)
-        content = read_file_content(file_path)
-        { content: content, status: :ok }
-      else
-        { error: '文件不存在或不是可预览的文本文件', status: :not_found }
-      end
-    rescue => e
-      { error: '无效的文件路径', status: :bad_request }
-    end
-  end
-
-  # 处理文件删除
-  def self.handle_delete(paths)
-    if paths.blank?
-      return { error: '没有选择要删除的文件', status: :bad_request }
-    end
-
-    begin
-      result = delete_files(paths)
-      deleted_files = result[:deleted]
-      failed_files = result[:failed]
-
-      if failed_files.any?
-        {
-          message: '部分文件删除成功',
-          deleted: deleted_files,
-          failed: failed_files,
-          status: :partial_content
-        }
-      else
-        {
-          message: '文件删除成功',
-          deleted: deleted_files,
-          status: :ok
-        }
-      end
-    rescue => e
-      Rails.logger.error "文件删除失败: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      { error: "文件删除失败: #{e.message}", status: :internal_server_error }
-    end
-  end
-
-  # 处理文件粘贴
-  def self.handle_paste(target_path, files, operation, file_action)
-    Rails.logger.info "=== Raw Parameters ==="
-    Rails.logger.info "target_path: #{target_path}"
-    Rails.logger.info "files: #{files.inspect}"
-    Rails.logger.info "operation: #{operation}"
-    Rails.logger.info "file_action: #{file_action}"
-
-    begin
-      result = paste_files(target_path, files, operation, file_action)
-      if result[:status] == :conflict
-        { duplicate_files: result[:duplicate_files], status: :conflict }
-      else
-        result[:status] = :ok
-        result
-      end
-    rescue => e
-      Rails.logger.error "文件粘贴失败: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      { error: "文件粘贴失败: #{e.message}", status: :internal_server_error }
-    end
-  end
-
-  # 处理重名文件检查
-  def self.handle_check_duplicates(target_path, files)
-    begin
-      result = check_duplicates(target_path, files)
-      duplicate_files = result[:duplicate_files]
-      
-      if duplicate_files.any?
-        { duplicate_files: duplicate_files, status: :conflict }
-      else
-        { duplicate_files: [], status: :ok }
-      end
-    rescue => e
-      Rails.logger.error "检查重名文件失败: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      { error: "检查重名文件失败: #{e.message}", status: :internal_server_error }
-    end
-  end
-
-  def self.handle_download(paths)
-    if paths.blank?
-      return { error: '没有选择要下载的文件', status: :bad_request }
-    end
-
-    begin
-      # 如果只选择了一个文件且不是目录，直接下载
-      if paths.size == 1
-        path = paths.first
-        file_path = get_file_path(path)
-        if File.directory?(file_path)
-          return download_directory(file_path)
-        else
-          return download_file(file_path)
-        end
-      end
-
-      # 如果选择了多个文件或包含目录，创建压缩包
-      download_multiple_files(paths)
-    rescue => e
-      Rails.logger.error "文件下载失败: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      { error: "文件下载失败: #{e.message}", status: :internal_server_error }
-    end
-  end
-
+  # 下载单个文件
   def self.download_file(file_path)
     if File.exist?(file_path)
       {
         file_path: file_path,
         file_name: File.basename(file_path),
-        content_type: get_content_type(file_path),
-        status: :ok
+        content_type: get_content_type(file_path)
       }
     else
-      { error: '文件不存在', status: :not_found }
+      nil
     end
   end
 
+  # 下载目录
   def self.download_directory(dir_path)
     if File.directory?(dir_path)
       zip_path = create_zip_from_directory(dir_path)
       {
         file_path: zip_path,
         file_name: "#{File.basename(dir_path)}.zip",
-        content_type: 'application/zip',
-        status: :ok
+        content_type: 'application/zip'
       }
     else
-      { error: '目录不存在', status: :not_found }
+      nil
     end
   end
 
+  # 下载多个文件
   def self.download_multiple_files(paths)
     temp_dir = Rails.root.join('tmp', 'downloads')
     FileUtils.mkdir_p(temp_dir)
@@ -532,30 +324,28 @@ class FilesModel
     {
       file_path: zip_path,
       file_name: "download_#{Time.now.to_i}.zip",
-      content_type: 'application/zip',
-      status: :ok
+      content_type: 'application/zip'
     }
   end
 
+  # 添加目录到压缩包
   def self.add_directory_to_zip(zipfile, dir_path)
     Dir.glob("#{dir_path}/**/**").each do |file|
       next if File.directory?(file)
       file_in_zip = file.sub("#{Rails.root}/public/root/", '')
-      # 使用 UTF-8 编码处理文件名，并确保路径分隔符统一
       file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
-      # 使用 add 方法，并设置编码
       zipfile.add(file_in_zip, file) { |entry| entry.encoding = 'UTF-8' }
     end
   end
 
+  # 添加文件到压缩包
   def self.add_file_to_zip(zipfile, file_path)
     file_in_zip = file_path.sub("#{Rails.root}/public/root/", '')
-    # 使用 UTF-8 编码处理文件名，并确保路径分隔符统一
     file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
-    # 使用 add 方法，并设置编码
     zipfile.add(file_in_zip, file_path) { |entry| entry.encoding = 'UTF-8' }
   end
 
+  # 获取文件类型
   def self.get_content_type(file_path)
     extension = File.extname(file_path).downcase
     case extension
@@ -580,6 +370,7 @@ class FilesModel
     end
   end
 
+  # 创建目录压缩包
   def self.create_zip_from_directory(dir_path)
     temp_dir = Rails.root.join('tmp', 'downloads')
     FileUtils.mkdir_p(temp_dir)

@@ -21,39 +21,4 @@ class LoginModel
     session.delete(:user_id)
     cookies.delete(:user_id)
   end
-
-  # 处理首页访问
-  def self.handle_index
-    if need_redirect_to_register?
-      { redirect: true }
-    else
-      { redirect: false }
-    end
-  end
-
-  # 处理用户登录
-  def self.handle_login(username, password, session, cookies)
-    if authenticate_user(username, password)
-      set_user_session(username, session, cookies)
-      { 
-        success: true, 
-        redirect_url: Rails.application.routes.url_helpers.root_path,
-        status: :ok
-      }
-    else
-      { 
-        error: '用户名或密码错误', 
-        status: :unprocessable_entity 
-      }
-    end
-  end
-
-  # 处理用户登出
-  def self.handle_logout(session, cookies)
-    clear_user_session(session, cookies)
-    { 
-      redirect_url: Rails.application.routes.url_helpers.root_path,
-      status: :ok
-    }
-  end
 end 

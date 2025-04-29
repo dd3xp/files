@@ -3,17 +3,30 @@ class LoginController < ApplicationController
   layout 'auth'
 
   def index
-    result = LoginModel.handle_index
-    redirect_to register_path if result[:redirect]
+    if LoginModel.need_redirect_to_register?
+      redirect_to register_path
+    end
   end
 
   def create
-    result = LoginModel.handle_login(params[:username], params[:password], session, cookies)
-    render json: result, status: result[:status]
+    username = params[:username]
+    password = params[:password]
+
+    if LoginModel.authenticate_user(username, password)
+      LoginModel.set_user_session(username, session, cookies)
+      render json: { 
+        success: true, 
+        redirect_url: Rails.application.routes.url_helpers.root_path
+      }, status: :ok
+    else
+      render json: { 
+        error: '用户名或密码错误'
+      }, status: :unprocessable_entity
+    end
   end
 
   def destroy
-    result = LoginModel.handle_logout(session, cookies)
-    redirect_to result[:redirect_url]
+    LoginModel.clear_user_session(session, cookies)
+    redirect_to Rails.application.routes.url_helpers.root_path
   end
 end 

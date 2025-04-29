@@ -3,16 +3,32 @@ class RegisterController < ApplicationController
   layout 'auth'
 
   def index
-    result = RegisterModel.handle_index
-    redirect_to login_path if result[:redirect]
+    if RegisterModel.need_redirect_to_login?
+      redirect_to login_path
+    end
   end
 
   def create
-    result = RegisterModel.handle_register(
-      params[:username], 
-      params[:password], 
-      params[:password_confirmation]
-    )
-    render json: result, status: result[:status]
+    username = params[:username]
+    password = params[:password]
+    password_confirmation = params[:password_confirmation]
+
+    unless RegisterModel.validate_password_confirmation(password, password_confirmation)
+      render json: { 
+        error: '两次输入的密码不一致'
+      }, status: :unprocessable_entity
+      return
+    end
+
+    if RegisterModel.create_user(username, password)
+      render json: { 
+        success: true, 
+        redirect_url: Rails.application.routes.url_helpers.login_path
+      }, status: :ok
+    else
+      render json: { 
+        error: '用户名已存在或密码不符合要求'
+      }, status: :unprocessable_entity
+    end
   end
 end 

@@ -7,75 +7,109 @@ class FilesController < ApplicationController
   end
 
   def upload
-    result = FilesModel.handle_upload(params[:path], params[:files], params[:fileAction])
-    render json: result, status: result[:status]
+    path = params[:path]
+    files = params[:files]
+    file_action = params[:fileAction]
+
+    if files.nil?
+      render json: { error: '没有选择文件' }, status: :bad_request
+      return
+    end
+
+    upload_path = Rails.root.join('public', 'root', path.to_s.sub(/^\//, ''))
+    result = FilesModel.upload_files(upload_path, files, file_action)
+    render json: result, status: :ok
   end
 
   def preview
-    result = FilesModel.handle_preview(params[:file])
-    render json: result, status: result[:status]
+    file = params[:file]
+    file_path = FilesModel.get_file_path(file)
+
+    begin
+      if !FilesModel.file_exists?(file_path) || !FilesModel.text_file?(file_path)
+        render json: { error: '文件不存在或不是可预览的文本文件' }, status: :not_found
+        return
+      end
+
+      content = FilesModel.read_file_content(file_path)
+      render json: { content: content }, status: :ok
+    rescue => e
+      render json: { error: e.message }, status: :internal_server_error
+    end
   end
 
   def delete
-    result = FilesModel.handle_delete(params[:paths])
-    render json: result, status: result[:status]
+    paths = params[:paths]
+    if paths.blank?
+      render json: { error: '没有选择要删除的文件' }, status: :bad_request
+      return
+    end
+
+    result = FilesModel.delete_files(paths)
+    render json: result, status: :ok
   end
 
   def paste
-    result = FilesModel.handle_paste(params[:targetPath], params[:files], params[:operation], params[:fileAction])
-    render json: result, status: result[:status]
+    target_path = params[:targetPath]
+    files = params[:files]
+    operation = params[:operation]
+    file_action = params[:fileAction]
+
+    # 检查重名文件
+    duplicate_files = FilesModel.check_duplicates(target_path, files)
+    if duplicate_files.any? && file_action.nil?
+      render json: { duplicate_files: duplicate_files }, status: :conflict
+      return
+    end
+
+    result = FilesModel.paste_files(target_path, files, operation, file_action)
+    render json: result, status: :ok
   end
 
   def check_duplicates
-    result = FilesModel.handle_check_duplicates(params[:targetPath], params[:files])
-    render json: result, status: result[:status]
+    target_path = params[:targetPath]
+    files = params[:files]
+    
+    duplicate_files = FilesModel.check_duplicates(target_path, files)
+    if duplicate_files.any?
+      render json: { duplicate_files: duplicate_files }, status: :conflict
+    else
+      render json: { duplicate_files: [] }, status: :ok
+    end
   end
 
   def download
     file_path = params[:id]
-    Rails.logger.info "=== Download Request ==="
-    Rails.logger.info "Raw file path: #{file_path.inspect}"
-    Rails.logger.info "Decoded file path: #{CGI.unescape(file_path)}"
     full_path = FilesModel.get_file_path(file_path)
-    Rails.logger.info "Full path: #{full_path}"
-    Rails.logger.info "File exists: #{File.exist?(full_path)}"
-    Rails.logger.info "Directory exists: #{Dir.exist?(full_path)}"
-    result = FilesModel.handle_download([file_path])
-    Rails.logger.info "Download result: #{result.inspect}"
     
-    if result[:status] == :ok
-      send_file result[:file_path],
-                filename: result[:file_name],
-                type: result[:content_type],
-                disposition: 'attachment'
-    else
-      render json: { error: result[:error] }, status: result[:status]
+    if !File.exist?(full_path)
+      render json: { error: '文件不存在' }, status: :not_found
+      return
     end
+
+    if File.directory?(full_path)
+      result = FilesModel.download_directory(full_path)
+    else
+      result = FilesModel.download_file(full_path)
+    end
+
+    send_file result[:file_path],
+              filename: result[:file_name],
+              type: result[:content_type],
+              disposition: 'attachment'
   end
 
   def download_multiple
     paths = params[:paths]
-    Rails.logger.info "=== Download Multiple Request ==="
-    Rails.logger.info "Raw paths: #{paths.inspect}"
-    paths.each do |path|
-      Rails.logger.info "=== Processing path ==="
-      Rails.logger.info "Raw path: #{path.inspect}"
-      Rails.logger.info "Decoded path: #{CGI.unescape(path)}"
-      full_path = FilesModel.get_file_path(path)
-      Rails.logger.info "Full path: #{full_path}"
-      Rails.logger.info "File exists: #{File.exist?(full_path)}"
-      Rails.logger.info "Directory exists: #{Dir.exist?(full_path)}"
+    if paths.blank?
+      render json: { error: '没有选择要下载的文件' }, status: :bad_request
+      return
     end
-    result = FilesModel.handle_download(paths)
-    Rails.logger.info "Download result: #{result.inspect}"
-    
-    if result[:status] == :ok
-      send_file result[:file_path],
-                filename: result[:file_name],
-                type: result[:content_type],
-                disposition: 'attachment'
-    else
-      render json: { error: result[:error] }, status: result[:status]
-    end
+
+    result = FilesModel.download_multiple_files(paths)
+    send_file result[:file_path],
+              filename: result[:file_name],
+              type: result[:content_type],
+              disposition: 'attachment'
   end
 end 
