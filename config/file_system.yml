@@ -1,0 +1,11 @@
+default: &default
+  root_path: 'public/root'
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default 

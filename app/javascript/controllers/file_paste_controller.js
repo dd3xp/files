@@ -123,7 +123,8 @@ export default class extends Controller {
         const requestBody = {
           targetPath: currentPath,
           files: this.clipboard.files,
-          operation: this.clipboard.operation
+          operation: this.clipboard.operation,
+          fileAction: 'replace'
         }
         console.log('Sending paste request:', requestBody)
 
@@ -137,13 +138,18 @@ export default class extends Controller {
         })
 
         if (!response.ok) {
-          throw new Error('粘贴失败')
+          const errorData = await response.json()
+          throw new Error(errorData.message || '粘贴失败')
         }
 
         const result = await response.json()
         console.log('Paste result:', result)
 
-        this.showToast(result.message, result.pasted.length > 0 ? 'success' : 'info')
+        if (result.failed && result.failed.length > 0) {
+          this.showToast(`粘贴失败: ${result.failed.join(', ')}`, 'error')
+        } else {
+          this.showToast(result.message, result.pasted.length > 0 ? 'success' : 'info')
+        }
 
         if (this.clipboard.operation === 'cut') {
           this.clipboard = null

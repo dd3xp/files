@@ -10,6 +10,11 @@ class FilesModel
     .txt .md .json .xml .html .css .js .rb .py .java .c .cpp .h .hpp .cs .php .sql .sh .bat .ps1 .tsx .ts
   ]
 
+  # 获取根目录路径
+  def self.root_path
+    Rails.root.join(Rails.application.config_for(:file_system)[:root_path])
+  end
+
   # 判断文件是否为可预览的文本文件
   def self.text_file?(file_path)
     TEXT_EXTENSIONS.include?(File.extname(file_path.to_s).downcase)
@@ -17,7 +22,7 @@ class FilesModel
 
   # 获取指定目录下的所有文件和文件夹
   def self.get_files_in_directory(path)
-    full_path = Rails.root.join('public', 'root', path.gsub(/^\/+/, ''))
+    full_path = root_path.join(path.gsub(/^\/+/, ''))
     return [] unless Dir.exist?(full_path)
 
     files = []
@@ -73,7 +78,7 @@ class FilesModel
   # 获取文件路径
   def self.get_file_path(path)
     clean_path = path.to_s.gsub(/^\/+/, '')
-    Rails.root.join('public', 'root', clean_path)
+    root_path.join(clean_path)
   end
 
   # 检查文件是否存在
@@ -93,7 +98,7 @@ class FilesModel
     failed_files = []
 
     paths.each do |path|
-      file_path = Rails.root.join('public', 'root', path.gsub(/^\/+/, ''))
+      file_path = root_path.join(path.gsub(/^\/+/, ''))
       if File.exist?(file_path)
         if File.directory?(file_path)
           FileUtils.rm_rf(file_path)
@@ -125,34 +130,41 @@ class FilesModel
       if File.exist?(file_path)
         case file_action&.to_s&.downcase
         when 'replace'
-          File.open(file_path, 'wb') do |f|
-            f.write(file.read)
+          begin
+            temp_path = File.join(upload_path, "temp_#{file.original_filename}")
+            File.open(temp_path, 'wb') do |f|
+              f.write(file.read)
+            end
+            uploaded_files << replace(temp_path, file_path, 'copy')
+            FileUtils.rm(temp_path)
+          rescue => e
+            failed_files << file.original_filename
           end
-          uploaded_files << file.original_filename
         when 'skip'
           skipped_files << file.original_filename
         when 'rename'
-          base_name = File.basename(file.original_filename, '.*')
-          extension = File.extname(file.original_filename)
-          counter = 1
-          new_file_path = file_path
-          while File.exist?(new_file_path)
-            new_name = "#{base_name}(#{counter})#{extension}"
-            new_file_path = File.join(upload_path, new_name)
-            counter += 1
+          begin
+            temp_path = File.join(upload_path, "temp_#{file.original_filename}")
+            File.open(temp_path, 'wb') do |f|
+              f.write(file.read)
+            end
+            uploaded_files << rename(temp_path, file_path, 'copy')
+            FileUtils.rm(temp_path)
+          rescue => e
+            failed_files << file.original_filename
           end
-          File.open(new_file_path, 'wb') do |f|
-            f.write(file.read)
-          end
-          uploaded_files << File.basename(new_file_path)
         else
           skipped_files << file.original_filename
         end
       else
-        File.open(file_path, 'wb') do |f|
-          f.write(file.read)
+        begin
+          File.open(file_path, 'wb') do |f|
+            f.write(file.read)
+          end
+          uploaded_files << file.original_filename
+        rescue => e
+          failed_files << file.original_filename
         end
-        uploaded_files << file.original_filename
       end
     end
 
@@ -176,28 +188,65 @@ class FilesModel
     }
   end
 
-  # 粘贴文件
+  # 替换文件
+  def self.replace(source_path, target_file, operation)
+    FileUtils.rm(target_file)
+    if operation == 'copy'
+      FileUtils.cp(source_path, target_file)
+    else
+      FileUtils.mv(source_path, target_file)
+    end
+    File.basename(target_file)
+  end
+
+  # 重命名文件
+  def self.rename(source_path, target_file, operation)
+    base_name = File.basename(target_file, '.*')
+    extension = File.extname(target_file)
+    counter = 1
+    new_target_file = target_file
+    while File.exist?(new_target_file)
+      new_name = "#{base_name}(#{counter})#{extension}"
+      new_target_file = File.join(File.dirname(target_file), new_name)
+      counter += 1
+    end
+    if operation == 'copy'
+      FileUtils.cp(source_path, new_target_file)
+    else
+      FileUtils.mv(source_path, new_target_file)
+    end
+    File.basename(new_target_file)
+  end
+
+  # 复制或移动文件
+  def self.copy_or_move(source_path, target_file, operation)
+    if operation == 'copy'
+      FileUtils.cp(source_path, target_file)
+    else
+      FileUtils.mv(source_path, target_file)
+    end
+    File.basename(target_file)
+  end
+
   def self.paste_files(target_path, files, operation, file_action)
     pasted_files = []
     failed_files = []
     skipped_files = []
 
+    target_dir = root_path.join(target_path.gsub(/^\/+/, ''))
+    FileUtils.mkdir_p(target_dir) unless Dir.exist?(target_dir)
+
     files.each do |file|
-      source_path = File.join('public/root', file[:path])
+      source_path = root_path.join(file[:path].gsub(/^\/+/, ''))
       file_name = File.basename(file[:path])
-      target_file = File.join('public/root', target_path, file_name)
+      target_file = target_dir.join(file_name)
+      
       # 处理重名文件
       if File.exist?(target_file)
         case file_action.to_s.downcase
         when 'replace'
           begin
-            FileUtils.rm(target_file)
-            if operation == 'copy'
-              FileUtils.cp(source_path, target_file)
-            else
-              FileUtils.mv(source_path, target_file)
-            end
-            pasted_files << File.basename(target_file)
+            pasted_files << replace(source_path, target_file, operation)
           rescue => e
             failed_files << file_name
           end
@@ -205,21 +254,7 @@ class FilesModel
           skipped_files << file_name
         when 'rename'
           begin
-            base_name = File.basename(file_name, '.*')
-            extension = File.extname(file_name)
-            counter = 1
-            new_target_file = target_file
-            while File.exist?(new_target_file)
-              new_name = "#{base_name}(#{counter})#{extension}"
-              new_target_file = File.join('public/root', target_path, new_name)
-              counter += 1
-            end
-            if operation == 'copy'
-              FileUtils.cp(source_path, new_target_file)
-            else
-              FileUtils.mv(source_path, new_target_file)
-            end
-            pasted_files << File.basename(new_target_file)
+            pasted_files << rename(source_path, target_file, operation)
           rescue => e
             failed_files << file_name
           end
@@ -228,12 +263,7 @@ class FilesModel
         end
       else
         begin
-          if operation == 'copy'
-            FileUtils.cp(source_path, target_file)
-          else
-            FileUtils.mv(source_path, target_file)
-          end
-          pasted_files << File.basename(target_file)
+          pasted_files << copy_or_move(source_path, target_file, operation)
         rescue => e
           failed_files << file_name
         end
@@ -263,9 +293,11 @@ class FilesModel
   # 检查重名文件
   def self.check_duplicates(target_path, files)
     duplicate_files = []
+    target_dir = root_path.join(target_path.gsub(/^\/+/, ''))
+    
     files.each do |file|
       file_name = File.basename(file[:path])
-      target_file = File.join('public/root', target_path, file_name)
+      target_file = target_dir.join(file_name)
       if File.exist?(target_file)
         duplicate_files << file_name
       end
@@ -330,7 +362,7 @@ class FilesModel
   def self.add_directory_to_zip(zipfile, dir_path)
     Dir.glob("#{dir_path}/**/**").each do |file|
       next if File.directory?(file)
-      file_in_zip = file.to_s.sub("#{Rails.root}/public/root/", '')
+      file_in_zip = file.to_s.sub(root_path.to_s + '/', '')
       file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
       zipfile.add(file_in_zip, file) { |entry| entry.encoding = 'UTF-8' }
     end
@@ -338,7 +370,7 @@ class FilesModel
 
   # 添加文件到压缩包
   def self.add_file_to_zip(zipfile, file_path)
-    file_in_zip = file_path.to_s.sub("#{Rails.root}/public/root/", '')
+    file_in_zip = file_path.to_s.sub(root_path.to_s + '/', '')
     file_in_zip = file_in_zip.force_encoding('UTF-8').gsub('\\', '/')
     zipfile.add(file_in_zip, file_path) { |entry| entry.encoding = 'UTF-8' }
   end
