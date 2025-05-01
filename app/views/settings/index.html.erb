@@ -4,7 +4,20 @@
         <p><%= @message %></p>
     </div>
   
-    <div class="settings-container">
-        <!-- 设置内容将在这里添加 -->
+    <div class="settings-container" data-controller="settings">
+        <div class="settings-section">
+            <h2>根目录设置</h2>
+            <div class="root-path-settings">
+                <div class="current-path">
+                    <label>当前根目录：</label>
+                    <span data-settings-target="rootPath"><%= @current_root_path %></span>
+                </div>
+                <div class="path-actions">
+                    <button class="btn btn-primary" data-settings-target="selectDirectory" data-action="click->settings#selectDirectory">
+                        选择新的根目录
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 <% end %>

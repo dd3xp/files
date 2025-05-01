@@ -1,11 +1,9 @@
-default: &default
-  root_path: 'public/root'
-
+---
+default:
+  root_path: C:\Users\11473\OneDrive\Desktop\G3下
 development:
-  <<: *default
-
+  root_path: C:\Users\11473\OneDrive\Desktop\G3下
 test:
-  <<: *default
-
+  root_path: C:\Users\11473\OneDrive\Desktop\G3下
 production:
-  <<: *default 
+  root_path: C:\Users\11473\OneDrive\Desktop\G3下

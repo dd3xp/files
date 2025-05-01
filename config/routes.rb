@@ -28,4 +28,7 @@ Rails.application.routes.draw do
   
   # 设置相关路由
   get 'settings', to: 'settings#index'
+  post 'settings/update_root_path', to: 'settings#update_root_path'
+  post 'settings/check_directory_access', to: 'settings#check_directory_access'
+  post 'settings/select_directory', to: 'settings#select_directory'
 end
