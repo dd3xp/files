@@ -38,7 +38,7 @@ class User
     file_path = Rails.root.join('config', 'users.yml')
     return {} unless File.exist?(file_path)
 
-    YAML.load_file(file_path) || {}
+    YAML.load_file(file_path, permitted_classes: [BCrypt::Password], aliases: true) || {}
   end
 
   def self.save_users(users)

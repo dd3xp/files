@@ -70,4 +70,78 @@ class SettingsModel
       { success: false, message: "更新失败: #{e.message}" }
     end
   end
+
+  def self.get_admin_password
+    begin
+      users_config = YAML.load_file(Rails.root.join('config', 'users.yml'), permitted_classes: [BCrypt::Password], aliases: true)
+      return { success: false, message: '配置文件为空' } if users_config.nil?
+      return { success: false, message: '配置文件格式错误' } unless users_config.is_a?(Hash)
+      
+      admin_data = users_config['dd3']
+      
+      if admin_data && admin_data['password_digest'].present?
+        {
+          success: true,
+          password: admin_data['password_digest']
+        }
+      else
+        {
+          success: false,
+          message: '未找到管理员账号或密码为空'
+        }
+      end
+    rescue Errno::ENOENT
+      {
+        success: false,
+        message: "找不到用户配置文件"
+      }
+    rescue Psych::SyntaxError
+      {
+        success: false,
+        message: "用户配置文件格式错误"
+      }
+    rescue => e
+      {
+        success: false,
+        message: "获取密码失败: #{e.message}"
+      }
+    end
+  end
+
+  def self.update_password(new_password)
+    begin
+      users_config = YAML.load_file(Rails.root.join('config', 'users.yml'), permitted_classes: [BCrypt::Password], aliases: true)
+      return { success: false, message: '配置文件为空' } if users_config.nil?
+      return { success: false, message: '配置文件格式错误' } unless users_config.is_a?(Hash)
+
+      # 生成新的密码哈希
+      password_digest = BCrypt::Password.create(new_password)
+
+      # 更新配置
+      users_config['dd3']['password_digest'] = password_digest
+
+      # 保存更新后的配置
+      File.write(Rails.root.join('config', 'users.yml'), users_config.to_yaml)
+
+      {
+        success: true,
+        message: '密码已更新'
+      }
+    rescue Errno::ENOENT
+      {
+        success: false,
+        message: "找不到用户配置文件"
+      }
+    rescue Psych::SyntaxError
+      {
+        success: false,
+        message: "用户配置文件格式错误"
+      }
+    rescue => e
+      {
+        success: false,
+        message: "更新密码失败: #{e.message}"
+      }
+    end
+  end
 end

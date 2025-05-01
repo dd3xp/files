@@ -5,17 +5,81 @@
     </div>
   
     <div class="settings-container" data-controller="settings">
-        <div class="settings-section">
-            <h2>根目录设置</h2>
-            <div class="root-path-settings">
-                <div class="current-path">
-                    <label>当前根目录：</label>
-                    <span data-settings-target="rootPath"><%= @current_root_path %></span>
+        <div class="settings-card">
+            <div class="settings-card-body">
+                <div class="settings-item">
+                    <div class="settings-item-label">
+                        <span>根目录路径</span>
+                        <small>设置文件管理器的根目录位置</small>
+                    </div>
+                    <div class="settings-item-content">
+                        <div class="path-display">
+                            <i class="fas fa-folder"></i>
+                            <span data-settings-target="rootPath"><%= @current_root_path %></span>
+                        </div>
+                        <button class="settings-btn" data-settings-target="selectDirectory" data-action="click->settings#selectDirectory">
+                            <i class="fas fa-folder-plus"></i>
+                            更改目录
+                        </button>
+                        <button class="settings-btn settings-btn-secondary" data-action="click->settings#restoreDefaultPath">
+                            <i class="fas fa-rotate-left"></i>
+                            恢复默认
+                        </button>
+                    </div>
                 </div>
-                <div class="path-actions">
-                    <button class="btn btn-primary" data-settings-target="selectDirectory" data-action="click->settings#selectDirectory">
-                        选择新的根目录
-                    </button>
+            </div>
+        </div>
+
+        <div class="settings-card mt-4">
+            <div class="settings-card-body">
+                <div class="settings-item">
+                    <div class="settings-item-label">
+                        <span>修改密码</span>
+                        <small>修改管理员账号的登录密码，密码长度至少6位</small>
+                    </div>
+                    <div class="settings-item-content">
+                        <div class="password-form">
+                            <div class="form-group">
+                                <div class="password-input-group">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" 
+                                           data-settings-target="newPassword"
+                                           placeholder="输入新密码" 
+                                           minlength="6" 
+                                           required>
+                                </div>
+                                <div class="password-input-group">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" 
+                                           data-settings-target="confirmPassword"
+                                           placeholder="确认新密码" 
+                                           minlength="6" 
+                                           required>
+                                </div>
+                            </div>
+                            <button type="button" class="settings-btn-password" data-action="click->settings#updatePassword">
+                                <i class="fas fa-key"></i>
+                                更新密码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card mt-4">
+            <div class="settings-card-body">
+                <div class="settings-item">
+                    <div class="settings-item-label">
+                        <span>退出登录</span>
+                        <small>退出当前账号的登录状态</small>
+                    </div>
+                    <div class="settings-item-content">
+                        <%= button_to logout_path, method: :delete, class: "settings-btn settings-btn-danger", data: { turbo: false } do %>
+                            <i class="fas fa-sign-out-alt"></i>
+                            退出登录
+                        <% end %>
+                    </div>
                 </div>
             </div>
         </div>
