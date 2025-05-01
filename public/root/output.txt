@@ -1,0 +1,841 @@
+File Structure:
+- C:\Codes\FileTransfer\app\controllers\application_controller.rb
+- C:\Codes\FileTransfer\app\controllers\dashboard_controller.rb
+- C:\Codes\FileTransfer\app\controllers\files_controller.rb
+- C:\Codes\FileTransfer\app\controllers\terminal_controller.rb
+- C:\Codes\FileTransfer\app\helpers\application_helper.rb
+- C:\Codes\FileTransfer\app\helpers\dashboard_helper.rb
+- C:\Codes\FileTransfer\app\javascript\application.js
+- C:\Codes\FileTransfer\app\jobs\application_job.rb
+- C:\Codes\FileTransfer\app\mailers\application_mailer.rb
+- C:\Codes\FileTransfer\app\models\application_record.rb
+- C:\Codes\FileTransfer\app\views\dashboard\index.html.erb
+- C:\Codes\FileTransfer\app\views\files\index.html.erb
+- C:\Codes\FileTransfer\app\views\layouts\application.html.erb
+- C:\Codes\FileTransfer\app\views\layouts\mailer.html.erb
+- C:\Codes\FileTransfer\app\views\layouts\mailer.text.erb
+- C:\Codes\FileTransfer\app\views\pwa\manifest.json.erb
+- C:\Codes\FileTransfer\app\views\pwa\service-worker.js
+- C:\Codes\FileTransfer\app\views\shared\_sidebar.html.erb
+- C:\Codes\FileTransfer\app\views\terminal\index.html.erb
+- C:\Codes\FileTransfer\app\javascript\controllers\application.js
+- C:\Codes\FileTransfer\app\javascript\controllers\hello_controller.js
+- C:\Codes\FileTransfer\app\javascript\controllers\index.js
+- C:\Codes\FileTransfer\app\assets\stylesheets\application.css
+- C:\Codes\FileTransfer\app\assets\stylesheets\dashboard.css
+- C:\Codes\FileTransfer\app\assets\stylesheets\files.css
+- C:\Codes\FileTransfer\app\assets\stylesheets\terminal.css
+
+========================================
+
+# File: C:\Codes\FileTransfer\app\controllers\application_controller.rb
+class ApplicationController < ActionController::Base
+  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
+  allow_browser versions: :modern
+  layout 'application'
+end
+
+
+# File: C:\Codes\FileTransfer\app\controllers\dashboard_controller.rb
+class DashboardController < ApplicationController
+  def index
+    @title = "控制面板"
+    @message = "欢迎来到 Dashboard 页面"
+  end
+end
+
+# File: C:\Codes\FileTransfer\app\controllers\files_controller.rb
+class FilesController < ApplicationController
+  def index
+    @title = "文件管理"
+    @message = "文件管理页面"
+    @current_path = params[:path] || '/'
+    @files = get_files_in_directory(@current_path)
+  end
+
+  private
+
+  def get_files_in_directory(path)
+    full_path = Rails.root.join('public', 'root', path.gsub(/^\/+/, ''))
+    return [] unless Dir.exist?(full_path)
+
+    Dir.entries(full_path).map do |entry|
+      next if entry.start_with?('.')
+      full_entry_path = File.join(full_path, entry)
+      {
+        name: entry,
+        path: File.join(path, entry),
+        is_directory: File.directory?(full_entry_path),
+        size: File.size(full_entry_path),
+        modified: File.mtime(full_entry_path),
+        icon: get_file_icon(entry)
+      }
+    end.compact
+  end
+
+  def get_file_icon(filename)
+    extension = File.extname(filename).downcase
+    case extension
+    when '.txt'
+      'fa-file-alt'
+    when '.pdf'
+      'fa-file-pdf'
+    when '.doc', '.docx'
+      'fa-file-word'
+    when '.xls', '.xlsx'
+      'fa-file-excel'
+    when '.ppt', '.pptx'
+      'fa-file-powerpoint'
+    when '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico'
+      'fa-file-image'
+    when '.zip', '.rar', '.7z', '.tar', '.gz'
+      'fa-file-archive'
+    when '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', '.m4v'
+      'fa-file-video'
+    when '.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma'
+      'fa-file-audio'
+    when '.html', '.htm'
+      'fa-file-code'
+    when '.css'
+      'fa-file-code'
+    when '.js', '.ts', '.jsx', '.tsx'
+      'fa-file-code'
+    when '.php'
+      'fa-file-code'
+    when '.py'
+      'fa-file-code'
+    when '.rb'
+      'fa-file-code'
+    when '.java'
+      'fa-file-code'
+    when '.cpp', '.c', '.h', '.hpp'
+      'fa-file-code'
+    when '.go'
+      'fa-file-code'
+    when '.rs'
+      'fa-file-code'
+    when '.cs'
+      'fa-file-code'
+    when '.swift'
+      'fa-file-code'
+    when '.kt'
+      'fa-file-code'
+    when '.scala'
+      'fa-file-code'
+    when '.r'
+      'fa-file-code'
+    when '.sql'
+      'fa-file-code'
+    when '.vue'
+      'fa-file-code'
+    when '.svelte'
+      'fa-file-code'
+    when '.ex', '.erl'
+      'fa-file-code'
+    when '.hs'
+      'fa-file-code'
+    when '.ml'
+      'fa-file-code'
+    when '.clj'
+      'fa-file-code'
+    when '.lua'
+      'fa-file-code'
+    when '.pl'
+      'fa-file-code'
+    when '.rkt'
+      'fa-file-code'
+    when '.dart'
+      'fa-file-code'
+    when '.nim'
+      'fa-file-code'
+    when '.zig'
+      'fa-file-code'
+    when '.v'
+      'fa-file-code'
+    when '.cr'
+      'fa-file-code'
+    else
+      'fa-file'
+    end
+  end
+end 
+
+# File: C:\Codes\FileTransfer\app\controllers\terminal_controller.rb
+class TerminalController < ApplicationController
+  def index
+    @title = "终端操作"
+    @message = "终端操作页面"
+  end
+end 
+
+# File: C:\Codes\FileTransfer\app\helpers\application_helper.rb
+module ApplicationHelper
+end
+
+
+# File: C:\Codes\FileTransfer\app\helpers\dashboard_helper.rb
+module DashboardHelper
+end
+
+
+# File: C:\Codes\FileTransfer\app\javascript\application.js
+// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
+import "@hotwired/turbo-rails"
+import "controllers"
+
+
+# File: C:\Codes\FileTransfer\app\jobs\application_job.rb
+class ApplicationJob < ActiveJob::Base
+  # Automatically retry jobs that encountered a deadlock
+  # retry_on ActiveRecord::Deadlocked
+
+  # Most jobs are safe to ignore if the underlying records are no longer available
+  # discard_on ActiveJob::DeserializationError
+end
+
+
+# File: C:\Codes\FileTransfer\app\mailers\application_mailer.rb
+class ApplicationMailer < ActionMailer::Base
+  default from: "from@example.com"
+  layout "mailer"
+end
+
+
+# File: C:\Codes\FileTransfer\app\models\application_record.rb
+class ApplicationRecord < ActiveRecord::Base
+  primary_abstract_class
+end
+
+
+# File: C:\Codes\FileTransfer\app\views\dashboard\index.html.erb
+<div class="content-header">
+  <h1><%= @title %></h1>
+  <p><%= @message %></p>
+</div>
+
+
+# File: C:\Codes\FileTransfer\app\views\files\index.html.erb
+<%= turbo_frame_tag "main_content" do %>
+  <div class="content-header">
+    <h1><%= @title %></h1>
+    <p><%= @message %></p>
+  </div>
+
+  <!-- 文件浏览器 -->
+  <div class="file-browser">
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+      <%= link_to "根目录", files_path, data: { turbo_frame: "main_content" } %>
+      <% @current_path.split('/').reject(&:empty?).each_with_index do |dir, index| %>
+        <% current_path = '/' + @current_path.split('/')[0..index+1].join('/') %>
+        <span>/</span>
+        <%= link_to dir, files_path(path: current_path), data: { turbo_frame: "main_content" } %>
+      <% end %>
+    </div>
+    
+    <!-- 文件列表 -->
+    <div class="file-list">
+      <% @files.each do |file| %>
+        <div class="file-item">
+          <% if file[:is_directory] %>
+            <!-- 如果是目录，则显示目录图标 -->
+            <%= link_to files_path(path: file[:path]), class: "directory", data: { turbo_frame: "main_content" } do %>
+              <i class="fas fa-folder"></i>
+              <span><%= file[:name] %></span>
+            <% end %>
+          <% else %>
+            <!-- 如果是文件，则显示文件图标 -->
+            <div class="file">
+              <i class="fas <%= file[:icon] %>"></i>
+              <span><%= file[:name] %></span>
+              <span class="file-size"><%= number_to_human_size(file[:size]) %></span>
+              <span class="file-date"><%= file[:modified].strftime("%Y-%m-%d %H:%M") %></span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+# File: C:\Codes\FileTransfer\app\views\layouts\application.html.erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "File Transfer" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "dashboard", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "files", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "terminal", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <div class="dashboard-container">
+      <%= render 'shared/sidebar' %>
+      <div class="main-content">
+        <%= turbo_frame_tag "main_content" do %>
+          <%= yield %>
+        <% end %>
+      </div>
+    </div>
+  </body>
+</html>
+
+# File: C:\Codes\FileTransfer\app\views\layouts\mailer.html.erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      /* Email styles need to be inline */
+    </style>
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>
+
+
+# File: C:\Codes\FileTransfer\app\views\layouts\mailer.text.erb
+<%= yield %>
+
+
+# File: C:\Codes\FileTransfer\app\views\pwa\manifest.json.erb
+{
+  "name": "FileTransfer",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "description": "FileTransfer.",
+  "theme_color": "red",
+  "background_color": "red"
+}
+
+
+# File: C:\Codes\FileTransfer\app\views\pwa\service-worker.js
+// Add a service worker for processing Web Push notifications:
+//
+// self.addEventListener("push", async (event) => {
+//   const { title, options } = await event.data.json()
+//   event.waitUntil(self.registration.showNotification(title, options))
+// })
+//
+// self.addEventListener("notificationclick", function(event) {
+//   event.notification.close()
+//   event.waitUntil(
+//     clients.matchAll({ type: "window" }).then((clientList) => {
+//       for (let i = 0; i < clientList.length; i++) {
+//         let client = clientList[i]
+//         let clientPath = (new URL(client.url)).pathname
+//
+//         if (clientPath == event.notification.data.path && "focus" in client) {
+//           return client.focus()
+//         }
+//       }
+//
+//       if (clients.openWindow) {
+//         return clients.openWindow(event.notification.data.path)
+//       }
+//     })
+//   )
+// })
+
+
+# File: C:\Codes\FileTransfer\app\views\shared\_sidebar.html.erb
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>文件传输系统</h2>
+  </div>
+  <div class="sidebar-nav">
+    <%= link_to files_path, class: "nav-item #{'active' if request.path.start_with?('/files')}" do %>
+      <i class="fas fa-folder"></i>
+      <span>文件管理</span>
+    <% end %>
+    <%= link_to terminal_path, class: "nav-item #{'active' if request.path.start_with?('/terminal')}" do %>
+      <i class="fas fa-terminal"></i>
+      <span>终端操作</span>
+    <% end %>
+  </div>
+</div> 
+
+# File: C:\Codes\FileTransfer\app\views\terminal\index.html.erb
+<%= turbo_frame_tag "main_content" do %>
+  <div class="dashboard-container">
+    <%= render 'shared/sidebar' %>
+    
+    <div class="main-content">
+      <div class="content-header">
+        <h1><%= @title %></h1>
+        <p><%= @message %></p>
+      </div>
+      
+      <div class="terminal-container">
+        <!-- 终端操作的内容将在这里实现 -->
+      </div>
+    </div>
+  </div>
+<% end %> 
+
+# File: C:\Codes\FileTransfer\app\javascript\controllers\application.js
+import { Application } from "@hotwired/stimulus"
+
+const application = Application.start()
+
+// Configure Stimulus development experience
+application.debug = false
+window.Stimulus   = application
+
+export { application }
+
+
+# File: C:\Codes\FileTransfer\app\javascript\controllers\hello_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  connect() {
+    this.element.textContent = "Hello World!"
+  }
+}
+
+
+# File: C:\Codes\FileTransfer\app\javascript\controllers\index.js
+// Import and register all your controllers from the importmap via controllers/**/*_controller
+import { application } from "controllers/application"
+import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
+eagerLoadControllersFrom("controllers", application)
+
+
+# File: C:\Codes\FileTransfer\app\assets\stylesheets\application.css
+/*
+ * This is a manifest file that'll be compiled into application.css.
+ *
+ * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
+ * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
+ * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
+ * depending on specificity.
+ *
+ * Consider organizing styles into separate files for maintainability.
+ */
+
+# File: C:\Codes\FileTransfer\app\assets\stylesheets\dashboard.css
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  position: relative;
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #50575e;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.sidebar-header {
+  padding: 32px 24px;
+  background-color: #3d444b;
+  border-bottom: 1px solid #495057;
+  position: relative;
+}
+
+.sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background-color: #3498db;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #e9ecef;
+  letter-spacing: 1px;
+}
+
+.sidebar-nav {
+  padding: 24px 0;
+  background-color: #50575e;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 24px;
+  color: #adb5bd;
+  text-decoration: none;
+  font-size: 1.1rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover, .nav-item.active {
+  background-color: #6c757d;
+  color: #e9ecef;
+  padding-left: 28px;
+}
+
+.nav-item i {
+  margin-right: 14px;
+  width: 24px;
+  font-size: 1.2rem;
+  color: #adb5bd;
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover i, .nav-item.active i {
+  color: #3498db;
+  transform: scale(1.1);
+}
+
+.nav-item span {
+  position: relative;
+  z-index: 1;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30px;
+  margin-left: 260px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.content-header {
+  margin-bottom: 20px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.content-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #2c3e50;
+}
+
+.content-header p {
+  margin: 5px 0 0;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.terminal-container {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  min-height: 400px;
+} 
+
+# File: C:\Codes\FileTransfer\app\assets\stylesheets\files.css
+.file-browser {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+
+.breadcrumb {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+}
+
+.breadcrumb a {
+  color: #3498db;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb span {
+  color: #6c757d;
+  margin: 0 5px;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.file-item:hover {
+  background-color: #f8f9fa;
+}
+
+.file-item a {
+  text-decoration: none;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.file-item .file {
+  display: flex;
+  align-items: center;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.file-item i {
+  margin-right: 15px;
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* 文件类型图标颜色 */
+.file-item i.fa-folder {
+  color: #f1c40f;
+}
+
+.file-item i.fa-file {
+  color: #95a5a6;
+}
+
+.file-item i.fa-file-code {
+  color: #3498db;
+}
+
+.file-item i.fa-file-image {
+  color: #2ecc71;
+}
+
+.file-item i.fa-file-pdf {
+  color: #e74c3c;
+}
+
+.file-item i.fa-file-word {
+  color: #3498db;
+}
+
+.file-item i.fa-file-excel {
+  color: #27ae60;
+}
+
+.file-item i.fa-file-powerpoint {
+  color: #e67e22;
+}
+
+.file-item i.fa-file-archive {
+  color: #8e44ad;
+}
+
+.file-item i.fa-file-video {
+  color: #e74c3c;
+}
+
+.file-item i.fa-file-audio {
+  color: #1abc9c;
+}
+
+.file-item i.fa-file-alt {
+  color: #95a5a6;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-right: 20px;
+  min-width: 100px;
+  text-align: right;
+}
+
+.file-date {
+  color: #6c757d;
+  font-size: 0.9rem;
+  min-width: 150px;
+  text-align: right;
+} 
+
+# File: C:\Codes\FileTransfer\app\assets\stylesheets\terminal.css
+/* 终端容器基本样式 */
+.terminal-container {
+  background: #2b2b2b;
+  color: #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 终端标题栏 */
+.terminal-header {
+  background: #1e1e1e;
+  padding: 0.5rem 1rem;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #3b3b3b;
+}
+
+.terminal-title {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.terminal-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.terminal-btn.close {
+  background: #ff5f56;
+}
+
+.terminal-btn.minimize {
+  background: #ffbd2e;
+}
+
+.terminal-btn.maximize {
+  background: #27c93f;
+}
+
+/* 终端内容区域 */
+.terminal-content {
+  flex: 1;
+  background: #1e1e1e;
+  padding: 1rem;
+  border-radius: 0 0 4px 4px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.terminal-line {
+  margin: 0;
+  padding: 0.2rem 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.terminal-line.prompt {
+  color: #4a9eff;
+}
+
+.terminal-line.command {
+  color: #e0e0e0;
+}
+
+.terminal-line.output {
+  color: #888;
+}
+
+.terminal-line.error {
+  color: #ff5f56;
+}
+
+/* 终端输入区域 */
+.terminal-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.terminal-prompt {
+  color: #4a9eff;
+  font-weight: bold;
+}
+
+.terminal-command-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9rem;
+  outline: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.terminal-command-input:focus {
+  background: #3b3b3b;
+}
+
+/* 滚动条样式 */
+.terminal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.terminal-content::-webkit-scrollbar-thumb {
+  background: #3b3b3b;
+  border-radius: 4px;
+}
+
+.terminal-content::-webkit-scrollbar-thumb:hover {
+  background: #4b4b4b;
+} 
+

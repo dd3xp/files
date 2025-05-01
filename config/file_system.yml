@@ -1,9 +1,9 @@
 ---
 default:
-  root_path: C:\Users\11473\OneDrive\Desktop\G3下
+  root_path: C:\Users\11473\OneDrive\Desktop\lxr
 development:
-  root_path: C:\Users\11473\OneDrive\Desktop\G3下
+  root_path: C:\Users\11473\OneDrive\Desktop\lxr
 test:
-  root_path: C:\Users\11473\OneDrive\Desktop\G3下
+  root_path: C:\Users\11473\OneDrive\Desktop\lxr
 production:
-  root_path: C:\Users\11473\OneDrive\Desktop\G3下
+  root_path: C:\Users\11473\OneDrive\Desktop\lxr

@@ -11,9 +11,12 @@ export default class extends Controller {
     // 监听按钮点击事件
   }
 
+
+  /*
+  * 择根目录
+  */
   async selectDirectory() {
     try {
-      // 使用settings控制器打开文件夹选择对话框
       const response = await fetch('/settings/select_directory', {
         method: 'POST',
         headers: {
@@ -27,7 +30,7 @@ export default class extends Controller {
       if (!result.success) {
         if (result.message) {
           console.log('目录选择取消:', result.message);
-          return; // 用户取消选择，直接返回
+          return;
         }
         throw new Error(result.message || '选择目录失败');
       }
@@ -63,18 +66,58 @@ export default class extends Controller {
         const updateResult = await updateResponse.json();
         if (updateResult.success) {
           this.rootPathTarget.textContent = updateResult.new_path;
-          alert('根目录已更新');
+          this.showToast('根目录已更新', 'success');
           // 刷新页面以确保配置更新生效
           window.location.reload();
         } else {
-          alert(updateResult.message);
+          this.showToast(updateResult.message, 'error');
         }
       } else {
-        alert(checkResult.message);
+        this.showToast(checkResult.message, 'error');
       }
     } catch (error) {
       console.error('选择目录失败:', error);
-      alert('选择目录失败: ' + error.message);
+      this.showToast('选择目录失败: ' + error.message, 'error');
     }
+  }
+
+  /**
+   * 显示提示消息
+   * @param {string} message - 要显示的消息内容
+   * @param {string} type - 消息类型，可以是'success'、'error'或'info'
+   */
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div')
+    toast.className = `custom-toast ${type}`
+    
+    const icon = document.createElement('i')
+    if (type === 'success') {
+      icon.className = 'fas fa-check-circle'
+    } else if (type === 'error') {
+      icon.className = 'fas fa-exclamation-circle'
+    } else {
+      icon.className = 'fas fa-info-circle'
+    }
+    
+    const messageSpan = document.createElement('span')
+    messageSpan.textContent = message
+    
+    toast.appendChild(icon)
+    toast.appendChild(messageSpan)
+    
+    document.body.appendChild(toast)
+    
+    setTimeout(() => {
+      toast.classList.add('show')
+    }, 10)
+    
+    setTimeout(() => {
+      toast.classList.remove('show')
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast)
+        }
+      }, 300)
+    }, 3000)
   }
 }
