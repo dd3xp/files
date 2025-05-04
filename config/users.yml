@@ -1,8 +1,0 @@
----
-dd3:
-  password_digest: !ruby/string:BCrypt::Password
-    str: "$2a$12$8M4tqZas3A85vX3/xHxEDuDI.xSqJz.qFFFWulKBAsKIwVvzzJJRu"
-    version: 2a
-    cost: 12
-    salt: "$2a$12$8M4tqZas3A85vX3/xHxEDu"
-    checksum: DI.xSqJz.qFFFWulKBAsKIwVvzzJJRu

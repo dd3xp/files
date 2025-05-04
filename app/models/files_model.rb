@@ -12,7 +12,25 @@ class FilesModel
 
   # 获取根目录路径
   def self.root_path
-    Rails.root.join(Rails.application.config_for(:file_system)[:root_path])
+    begin
+      config = Rails.application.config_for(:file_system)
+      relative_path = config[:root_path]
+      
+      if relative_path.nil? || relative_path.empty?
+        # 如果配置文件为空，使用默认的 public/root 目录
+        default_path = File.expand_path('public/root', Rails.root)
+        # 确保目录存在
+        FileUtils.mkdir_p(default_path) unless Dir.exist?(default_path)
+        return default_path
+      end
+      
+      File.expand_path(relative_path, Rails.root)
+    rescue => e
+      # 如果读取配置失败，也使用默认路径
+      default_path = File.expand_path('public/root', Rails.root)
+      FileUtils.mkdir_p(default_path) unless Dir.exist?(default_path)
+      default_path
+    end
   end
 
   # 判断文件是否为可预览的文本文件
@@ -22,7 +40,7 @@ class FilesModel
 
   # 获取指定目录下的所有文件和文件夹
   def self.get_files_in_directory(path)
-    full_path = root_path.join(path.gsub(/^\/+/, ''))
+    full_path = File.join(root_path, path.gsub(/^\/+/, ''))
     return [] unless Dir.exist?(full_path)
 
     files = []
@@ -78,7 +96,7 @@ class FilesModel
   # 获取文件路径
   def self.get_file_path(path)
     clean_path = path.to_s.gsub(/^\/+/, '')
-    root_path.join(clean_path)
+    File.join(root_path, clean_path)
   end
 
   # 检查文件是否存在
@@ -98,7 +116,7 @@ class FilesModel
     failed_files = []
 
     paths.each do |path|
-      file_path = root_path.join(path.gsub(/^\/+/, ''))
+      file_path = File.join(root_path, path.gsub(/^\/+/, ''))
       if File.exist?(file_path)
         if File.directory?(file_path)
           FileUtils.rm_rf(file_path)
@@ -233,13 +251,13 @@ class FilesModel
     failed_files = []
     skipped_files = []
 
-    target_dir = root_path.join(target_path.gsub(/^\/+/, ''))
+    target_dir = File.join(root_path, target_path.gsub(/^\/+/, ''))
     FileUtils.mkdir_p(target_dir) unless Dir.exist?(target_dir)
 
     files.each do |file|
-      source_path = root_path.join(file[:path].gsub(/^\/+/, ''))
+      source_path = File.join(root_path, file[:path].gsub(/^\/+/, ''))
       file_name = File.basename(file[:path])
-      target_file = target_dir.join(file_name)
+      target_file = File.join(target_dir, file_name)
       
       # 处理重名文件
       if File.exist?(target_file)
@@ -293,11 +311,11 @@ class FilesModel
   # 检查重名文件
   def self.check_duplicates(target_path, files)
     duplicate_files = []
-    target_dir = root_path.join(target_path.gsub(/^\/+/, ''))
+    target_dir = File.join(root_path, target_path.gsub(/^\/+/, ''))
     
     files.each do |file|
       file_name = File.basename(file[:path])
-      target_file = target_dir.join(file_name)
+      target_file = File.join(target_dir, file_name)
       if File.exist?(target_file)
         duplicate_files << file_name
       end
@@ -335,7 +353,7 @@ class FilesModel
 
   # 下载多个文件
   def self.download_multiple_files(paths)
-    temp_dir = Rails.root.join('tmp', 'downloads')
+    temp_dir = File.join(Rails.root, 'tmp', 'downloads')
     FileUtils.mkdir_p(temp_dir)
     
     zip_path = File.join(temp_dir, "download_#{Time.now.to_i}.zip")
@@ -402,7 +420,7 @@ class FilesModel
 
   # 创建目录压缩包
   def self.create_zip_from_directory(dir_path)
-    temp_dir = Rails.root.join('tmp', 'downloads')
+    temp_dir = File.join(Rails.root, 'tmp', 'downloads')
     FileUtils.mkdir_p(temp_dir)
     
     # 使用 UTF-8 编码处理压缩包名称

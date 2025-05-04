@@ -1,9 +1,0 @@
----
-default:
-  root_path: C:/Codes/FileTransfer/public/root
-development:
-  root_path: C:/Codes/FileTransfer/public/root
-test:
-  root_path: C:/Codes/FileTransfer/public/root
-production:
-  root_path: C:/Codes/FileTransfer/public/root

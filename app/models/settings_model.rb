@@ -1,8 +1,27 @@
+require 'fileutils'
+
 class SettingsModel
   # 获取当前根目录的完整路径
   def self.get_current_root_path
-    relative_path = Rails.application.config_for(:file_system)[:root_path]
-    File.expand_path(relative_path, Rails.root)
+    begin
+      config = Rails.application.config_for(:file_system)
+      relative_path = config[:root_path]
+      
+      if relative_path.nil? || relative_path.empty?
+        # 如果配置文件为空，使用默认的 public/root 目录
+        default_path = File.expand_path('public/root', Rails.root)
+        # 确保目录存在
+        FileUtils.mkdir_p(default_path) unless Dir.exist?(default_path)
+        return default_path
+      end
+      
+      File.expand_path(relative_path, Rails.root)
+    rescue => e
+      # 如果读取配置失败，也使用默认路径
+      default_path = File.expand_path('public/root', Rails.root)
+      FileUtils.mkdir_p(default_path) unless Dir.exist?(default_path)
+      default_path
+    end
   end
 
   # 选择目录

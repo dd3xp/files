@@ -18,7 +18,7 @@ class FilesController < ApplicationController
       return
     end
 
-    upload_path = FilesModel.root_path.join(path.to_s.sub(/^\//, ''))
+    upload_path = File.join(FilesModel.root_path, path.to_s.sub(/^\//, ''))
     result = FilesModel.upload_files(upload_path, files, file_action)
     render json: result, status: :ok
   end
