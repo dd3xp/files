@@ -13,13 +13,13 @@
                         <small>设置文件管理器的根目录位置</small>
                     </div>
                     <div class="settings-item-content">
-                        <div class="path-display">
+                        <div class="path-input-container">
                             <i class="fas fa-folder"></i>
-                            <span data-settings-target="rootPath"><%= @current_root_path %></span>
+                            <input type="text" class="path-input" data-settings-target="rootPathInput" value="<%= @current_root_path %>">
                         </div>
-                        <button class="settings-btn" data-settings-target="selectDirectory" data-action="click->settings#selectDirectory">
-                            <i class="fas fa-folder-plus"></i>
-                            更改目录
+                        <button class="settings-btn" data-action="click->settings#applyNewPath">
+                            <i class="fas fa-check"></i>
+                            应用新路径
                         </button>
                         <button class="settings-btn settings-btn-secondary" data-action="click->settings#restoreDefaultPath">
                             <i class="fas fa-rotate-left"></i>

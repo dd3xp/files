@@ -45,8 +45,33 @@ export default class extends Controller {
 
     const menu = this.menuTarget
     menu.style.display = 'block'
-    menu.style.left = `${event.pageX}px`
-    menu.style.top = `${event.pageY}px`
+    
+    // 获取视口尺寸
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    // 计算菜单位置
+    let left = event.pageX
+    let top = event.pageY
+    
+    // 如果菜单会超出右边界，则靠右对齐
+    if (left + menu.offsetWidth > viewportWidth) {
+      left = viewportWidth - menu.offsetWidth
+      menu.classList.add('right')
+    } else {
+      menu.classList.remove('right')
+    }
+    
+    // 如果菜单会超出底部，则靠底对齐
+    if (top + menu.offsetHeight > viewportHeight) {
+      top = viewportHeight - menu.offsetHeight
+      menu.classList.add('bottom')
+    } else {
+      menu.classList.remove('bottom')
+    }
+    
+    menu.style.left = `${left}px`
+    menu.style.top = `${top}px`
 
     this.updateMenuButtons()
   }

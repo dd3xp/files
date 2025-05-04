@@ -422,6 +422,18 @@ pre {
   padding: 4px 0;
   min-width: 160px;
   z-index: 1000;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.context-menu.bottom {
+  bottom: 0;
+  top: auto;
+}
+
+.context-menu.right {
+  right: 0;
+  left: auto;
 }
 
 .menu-item {
