@@ -100,12 +100,36 @@ export default class extends Controller {
    */
   showToast(message, type = 'info') {
     const toast = document.createElement('div')
-    toast.className = `toast toast-${type}`
-    toast.textContent = message
+    toast.className = `custom-toast ${type}`
+    
+    const icon = document.createElement('i')
+    if (type === 'success') {
+      icon.className = 'fas fa-check-circle'
+    } else if (type === 'error') {
+      icon.className = 'fas fa-exclamation-circle'
+    } else {
+      icon.className = 'fas fa-info-circle'
+    }
+    
+    const messageSpan = document.createElement('span')
+    messageSpan.textContent = message
+    
+    toast.appendChild(icon)
+    toast.appendChild(messageSpan)
+    
     document.body.appendChild(toast)
     
     setTimeout(() => {
-      toast.remove()
+      toast.classList.add('show')
+    }, 10)
+    
+    setTimeout(() => {
+      toast.classList.remove('show')
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast)
+        }
+      }, 300)
     }, 3000)
   }
 } 

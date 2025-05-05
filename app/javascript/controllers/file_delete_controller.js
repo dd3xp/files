@@ -32,11 +32,14 @@ export default class extends Controller {
    */
   async delete() {
     if (!this.selectedFiles || this.selectedFiles.length === 0) {
-      alert('请先选择要删除的文件')
+      this.showToast('请先选择要删除的文件', 'error')
       return
     }
 
-    if (!confirm('确定要删除选中的文件吗？')) {
+    const fileList = this.selectedFiles.map(file => `- ${file.name}`).join('\n')
+    const confirmed = await this.showDeleteConfirmation(fileList)
+    
+    if (!confirmed) {
       return
     }
 
@@ -80,13 +83,96 @@ export default class extends Controller {
         }, 1000)
       } else {
         this.updateAllProgressBars('失败', '#e74c3c')
-        alert(result.error || '删除失败')
+        this.showToast(result.error || '删除失败', 'error')
       }
     } catch (error) {
       console.error('Error:', error)
       this.updateAllProgressBars('失败', '#e74c3c')
-      alert('删除文件时发生错误')
+      this.showToast('删除文件时发生错误', 'error')
     }
+  }
+
+  /**
+   * 显示删除确认对话框
+   * @param {string} fileList - 要删除的文件列表
+   * @returns {Promise<boolean>} - 用户是否确认删除
+   */
+  async showDeleteConfirmation(fileList) {
+    return new Promise((resolve) => {
+      const dialog = document.createElement('div')
+      dialog.className = 'choice-dialog'
+      
+      const template = document.getElementById('duplicate-choice-dialog-template')
+      const content = template.content.cloneNode(true)
+      
+      content.querySelector('h3').textContent = '确认删除'
+      content.querySelector('p').textContent = '确定要删除以下文件吗？'
+      content.querySelector('#duplicate-files-list').textContent = fileList
+      
+      const buttons = content.querySelector('.choice-dialog-buttons')
+      buttons.innerHTML = `
+        <button class="choice-dialog-button" data-value="confirm">确认</button>
+        <button class="choice-dialog-button" data-value="cancel">取消</button>
+      `
+      
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          document.body.removeChild(dialog)
+          resolve(false)
+        }
+      })
+
+      dialog.appendChild(content)
+      document.body.appendChild(dialog)
+
+      dialog.querySelectorAll('.choice-dialog-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const value = button.dataset.value
+          document.body.removeChild(dialog)
+          resolve(value === 'confirm')
+        })
+      })
+    })
+  }
+
+  /**
+   * 显示提示消息
+   * @param {string} message - 要显示的消息内容
+   * @param {string} type - 消息类型，可以是'success'、'error'或'info'
+   */
+  showToast(message, type = 'info') {
+    const toast = document.createElement('div')
+    toast.className = `custom-toast ${type}`
+    
+    const icon = document.createElement('i')
+    if (type === 'success') {
+      icon.className = 'fas fa-check-circle'
+    } else if (type === 'error') {
+      icon.className = 'fas fa-exclamation-circle'
+    } else {
+      icon.className = 'fas fa-info-circle'
+    }
+    
+    const messageSpan = document.createElement('span')
+    messageSpan.textContent = message
+    
+    toast.appendChild(icon)
+    toast.appendChild(messageSpan)
+    
+    document.body.appendChild(toast)
+    
+    setTimeout(() => {
+      toast.classList.add('show')
+    }, 10)
+    
+    setTimeout(() => {
+      toast.classList.remove('show')
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast)
+        }
+      }, 300)
+    }, 3000)
   }
 
   /**
