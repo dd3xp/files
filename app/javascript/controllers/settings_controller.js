@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["rootPathInput"]
+  static targets = ["rootPathInput", "newPassword", "confirmPassword"]
 
   /*
   * 应用新路径
@@ -77,6 +77,50 @@ export default class extends Controller {
     } catch (error) {
       console.error('恢复默认路径失败:', error)
       this.showToast(error.message || '恢复默认路径失败', 'error')
+    }
+  }
+
+  async updatePassword() {
+    const newPassword = this.newPasswordTarget.value
+    const confirmPassword = this.confirmPasswordTarget.value
+
+    if (!newPassword || !confirmPassword) {
+      this.showToast('请输入新密码和确认密码', 'error')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      this.showToast('密码长度至少6位', 'error')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      this.showToast('两次输入的密码不一致', 'error')
+      return
+    }
+
+    try {
+      const response = await fetch('/settings/update_password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ password: newPassword })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        this.showToast('密码更新成功', 'success')
+        // 清空密码输入框
+        this.newPasswordTarget.value = ''
+        this.confirmPasswordTarget.value = ''
+      } else {
+        this.showToast(result.message || '密码更新失败', 'error')
+      }
+    } catch (error) {
+      console.error('更新密码失败:', error)
+      this.showToast(error.message || '更新密码失败', 'error')
     }
   }
 
