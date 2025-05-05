@@ -28,12 +28,12 @@ class FilesController < ApplicationController
     file_path = FilesModel.get_file_path(file)
 
     begin
-      if !FilesModel.file_exists?(file_path) || !FilesModel.text_file?(file_path)
+      if !File.exist?(file_path) || !FilesModel.text_file?(file_path)
         render json: { error: '文件不存在或不是可预览的文本文件' }, status: :not_found
         return
       end
 
-      content = FilesModel.read_file_content(file_path)
+      content = File.read(file_path).force_encoding('UTF-8')
       render json: { content: content }, status: :ok
     rescue => e
       render json: { error: e.message }, status: :internal_server_error
